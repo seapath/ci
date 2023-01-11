@@ -1,0 +1,28 @@
+extends: default
+title_page:
+  background_color: #56b0c9
+  align: center
+  logo:
+    image: image:logo_lfe.png[width=50%, align=center]
+  title:
+    top: 30%
+    font_style: bold
+    font_color: #ffffff
+    line_height: 0.9
+  text-transform: uppercase
+code:
+  font_color: #333333
+  font_style: normal
+  font_size: 10
+  background_color: #f6f6f6
+  border_color: #56b0c9
+  border_radius: 2
+base:
+  font_color: #000000
+table:
+  align: center
+  border_color: #000000
+  font-size: 8
+  head:
+    font-size: 10
+    background-color: #56b0c9

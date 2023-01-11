@@ -1,0 +1,6 @@
+[project]
+org='sfl'
+name='asciidoc-report'
+
+[build]
+command='./compile.sh -i /tmp/cukinia-res'
