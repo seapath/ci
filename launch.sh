@@ -47,13 +47,18 @@ git fetch -q origin ${PR_BRANCH}
 git checkout -q FETCH_HEAD
 
 # Launch tests
-mkdir $CUKINIA_TEST_DIR
-cukinia -f junitxml -o $CUKINIA_TEST_DIR/cukinia.xml $CI_DIR/ansible/cukinia.conf || true
+LOCAL_ANSIBLE_DIR=/home/virtu/ansible # Local dir that contains keys and inventories
+docker run -it --rm -w /mnt -v $(pwd):/mnt -v $LOCAL_ANSIBLE_DIR:/tmp \
+ansible:2.9 ansible-playbook \
+-i /tmp/seapath_inventories/seapath_cluster_ci.yml \
+-i /tmp/seapath_inventories/seapath_ovs_ci.yml \
+--key-file /tmp/ci_rsa --skip-tags "package-install" \
+/tmp/playbooks/ci_the_one_playbook.yaml
 
 # Create report
 cd $CI_DIR/ci/report-generator
 cqfd -q init
-CQFD_EXTRA_RUN_ARGS="-v ${CUKINIA_TEST_DIR}:/tmp/cukinia-res"
+CQFD_EXTRA_RUN_ARGS="-v $CI_DIR/ansible:/tmp/cukinia-res"
 if ! cqfd -q run; then
   die "cqfd error"
 fi
