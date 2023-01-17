@@ -38,43 +38,50 @@ PR_N=`echo $PR_BRANCH | cut -d '/' -f 3`
 TIME=`date +%Hh%Mm%S`
 CUKINIA_TEST_DIR=$CI_DIR/cukinia_tests
 REPORT_NAME=test-report_${PR_HASH}_${TIME}.pdf
-REPORT_DIR=$CI_DIR/site/docs/reports/PR-${PR_N}
+REPORT_DIR=$CI_DIR/reports/docs/reports/PR-${PR_N}
 
 # Get sources
-git clone -q git@github.com:seapath/ansible.git
+git clone -q https://github.com/seapath/ansible
 cd ansible
 git fetch -q origin ${PR_BRANCH}
 git checkout -q FETCH_HEAD
 
 # Launch tests
+cqfd init
+cqfd -b prepare
 LOCAL_ANSIBLE_DIR=/home/virtu/ansible # Local dir that contains keys and inventories
-docker run -it --rm -w /mnt -v $(pwd):/mnt -v $LOCAL_ANSIBLE_DIR:/tmp \
-ansible:2.9 ansible-playbook \
+CQFD_EXTRA_RUN_ARGS="-v $LOCAL_ANSIBLE_DIR:/tmp" cqfd run ansible-playbook \
 -i /tmp/seapath_inventories/seapath_cluster_ci.yml \
 -i /tmp/seapath_inventories/seapath_ovs_ci.yml \
 --key-file /tmp/ci_rsa --skip-tags "package-install" \
-/tmp/playbooks/ci_the_one_playbook.yaml
+playbooks/ci_the_one_playbook.yaml
 
 # Create report
+mkdir $CUKINIA_TEST_DIR
+mv $CI_DIR/ansible/cukinia.xml $CUKINIA_TEST_DIR
 cd $CI_DIR/ci/report-generator
 cqfd -q init
-CQFD_EXTRA_RUN_ARGS="-v $CI_DIR/ansible:/tmp/cukinia-res"
-if ! cqfd -q run; then
+if ! CQFD_EXTRA_RUN_ARGS="-v $CUKINIA_TEST_DIR:/tmp/cukinia-res" cqfd -q run; then
   die "cqfd error"
 fi
 
 # Upload report
-git clone -q --depth 1 -b site git@github.com:seapath/ci.git $CI_DIR/site
+
+git clone -q --depth 1 -b reports git@github.com:seapath/ci.git \
+--config core.sshCommand="ssh -i ~/.ssh/ci_rsa" $CI_DIR/reports
 mkdir -p $REPORT_DIR
 mv $CI_DIR/ci/report-generator/main.pdf $REPORT_DIR/$REPORT_NAME
 cd $REPORT_DIR
+git config --local user.email "ci.seapath@gmail.com"
+git config --local user.name "Seapath CI"
+git config --local core.sshCommand "ssh -i ~/.ssh/ci_rsa"
 git add $REPORT_NAME
 git commit -q -m "upload report $REPORT_NAME"
-git push -q origin site
+git push -q origin reports
 
 # Give link
 echo See test Report at \
-https://seapath.github.io/ci/reports/PR-${PR_N}/${REPORT_NAME}
+https://github.com/seapath/ci/blob/reports/docs/reports/PR-${PR_N}/${REPORT_NAME}
 
 # grep for succes
 if grep -q "<failure" $CUKINIA_TEST_DIR/*; then
