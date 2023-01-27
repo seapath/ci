@@ -58,7 +58,7 @@ playbooks/ci_the_one_playbook.yaml
 
 # Create report
 mkdir $CUKINIA_TEST_DIR
-mv $CI_DIR/ansible/cukinia.xml $CUKINIA_TEST_DIR
+mv $CI_DIR/ansible/*.xml $CUKINIA_TEST_DIR
 cd $CI_DIR/ci/report-generator
 cqfd -q init
 if ! CQFD_EXTRA_RUN_ARGS="-v $CUKINIA_TEST_DIR:/tmp/cukinia-res" cqfd -q run; then
