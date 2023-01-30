@@ -45,6 +45,7 @@ configuration() {
 
 # Launch setup and hardening Debian
 setup_debian() {
+  cd ansible
   LOCAL_ANSIBLE_DIR=/home/virtu/ansible # Local dir that contains keys and inventories
   CQFD_EXTRA_RUN_ARGS="-v $LOCAL_ANSIBLE_DIR:/tmp" cqfd run ansible-playbook \
   -i /tmp/seapath_inventories/seapath_cluster_ci.yml \
@@ -56,7 +57,9 @@ setup_debian() {
 
 # Prepare, launch test and upload test report
 launch_test() {
+  WORK_DIR=`pwd`
 
+  cd ansible
   LOCAL_ANSIBLE_DIR=/home/virtu/ansible # Local dir that contains keys and inventories
   CQFD_EXTRA_RUN_ARGS="-v $LOCAL_ANSIBLE_DIR:/tmp" cqfd run ansible-playbook \
   -i /tmp/seapath_inventories/seapath_cluster_ci.yml \
@@ -68,10 +71,10 @@ launch_test() {
 
   # Create report
 
-  CUKINIA_TEST_DIR=${CI_DIR}/cukinia
+  CUKINIA_TEST_DIR=${WORK_DIR}/cukinia
   mkdir $CUKINIA_TEST_DIR
-  mv $CI_DIR/ansible/*.xml $CUKINIA_TEST_DIR
-  cd $CI_DIR/ci/report-generator
+  mv $WORK_DIR/ansible/*.xml $CUKINIA_TEST_DIR
+  cd $WORK_DIR/ci/report-generator
   cqfd -q init
   if ! CQFD_EXTRA_RUN_ARGS="-v $CUKINIA_TEST_DIR:/tmp/cukinia-res" cqfd -q run; then
     die "cqfd error"
@@ -82,12 +85,12 @@ launch_test() {
   PR_N=`echo $GITHUB_REF | cut -d '/' -f 3`
   TIME=`date +%F_%Hh%Mm%S`
   REPORT_NAME=test-report_${GITHUB_RUN_ID}_${GITHUB_RUN_ATTEMPT}_${TIME}.pdf
-  REPORT_DIR=${CI_DIR}/reports/docs/reports/PR-${PR_N}
+  REPORT_DIR=${WORK_DIR}/reports/docs/reports/PR-${PR_N}
 
   git clone -q --depth 1 -b reports git@github.com:seapath/ci.git \
-  --config core.sshCommand="ssh -i ~/.ssh/ci_rsa" $CI_DIR/reports
+  --config core.sshCommand="ssh -i ~/.ssh/ci_rsa" $WORK_DIR/reports
   mkdir -p $REPORT_DIR
-  mv $CI_DIR/ci/report-generator/main.pdf $REPORT_DIR/$REPORT_NAME
+  mv $WORK_DIR/ci/report-generator/main.pdf $REPORT_DIR/$REPORT_NAME
   cd $REPORT_DIR
   git config --local user.email "ci.seapath@gmail.com"
   git config --local user.name "Seapath CI"
@@ -108,7 +111,7 @@ launch_test() {
   fi
 
   # remove github clone dir and cukinia test dir
-  rm -rf $CI_DIR
+  rm -rf $WORK_DIR
   exit $RES
 }
 
