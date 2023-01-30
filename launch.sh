@@ -33,19 +33,10 @@ configuration() {
     die "cqfd not found"
   fi
 
-  PR_BRANCH=$1
-  PR_HASH=`echo $2 | cut -b 1-7`
-  CI_DIR=`pwd`
-  PR_N=`echo $PR_BRANCH | cut -d '/' -f 3`
-  TIME=`date +%Hh%Mm%S`
-  CUKINIA_TEST_DIR=$CI_DIR/cukinia_tests
-  REPORT_NAME=test-report_${PR_HASH}_${TIME}.pdf
-  REPORT_DIR=$CI_DIR/reports/docs/reports/PR-${PR_N}
-
   # Get sources
   git clone -q https://github.com/seapath/ansible
   cd ansible
-  git fetch -q origin ${PR_BRANCH}
+  git fetch -q origin ${GITHUB_REF}
   git checkout -q FETCH_HEAD
 
   cqfd init
@@ -76,6 +67,8 @@ launch_test() {
   playbooks/test_run_cukinia.yaml
 
   # Create report
+
+  CUKINIA_TEST_DIR=${CI_DIR}/cukinia
   mkdir $CUKINIA_TEST_DIR
   mv $CI_DIR/ansible/*.xml $CUKINIA_TEST_DIR
   cd $CI_DIR/ci/report-generator
@@ -85,6 +78,11 @@ launch_test() {
   fi
 
   # Upload report
+
+  PR_N=`echo $GITHUB_REF | cut -d '/' -f 3`
+  TIME=`date +%F_%Hh%Mm%S`
+  REPORT_NAME=test-report_${GITHUB_RUN_ID}_${GITHUB_RUN_ATTEMPT}_${TIME}.pdf
+  REPORT_DIR=${CI_DIR}/reports/docs/reports/PR-${PR_N}
 
   git clone -q --depth 1 -b reports git@github.com:seapath/ci.git \
   --config core.sshCommand="ssh -i ~/.ssh/ci_rsa" $CI_DIR/reports
