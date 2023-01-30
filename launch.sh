@@ -59,12 +59,21 @@ setup_debian() {
   -i /tmp/seapath_inventories/seapath_cluster_ci.yml \
   -i /tmp/seapath_inventories/seapath_ovs_ci.yml \
   --key-file /tmp/ci_rsa --skip-tags "package-install" \
-  playbooks/ci_the_one_playbook.yaml
+  playbooks/cluster_setup_debian.yaml \
+  playbooks/cluster_setup_hardened_debian.yaml
 }
 
 # Prepare, launch test and upload test report
 launch_test() {
-  # TODO : split playbooks to call tests here
+
+  LOCAL_ANSIBLE_DIR=/home/virtu/ansible # Local dir that contains keys and inventories
+  CQFD_EXTRA_RUN_ARGS="-v $LOCAL_ANSIBLE_DIR:/tmp" cqfd run ansible-playbook \
+  -i /tmp/seapath_inventories/seapath_cluster_ci.yml \
+  -i /tmp/seapath_inventories/seapath_ovs_ci.yml \
+  --key-file /tmp/ci_rsa --skip-tags "package-install" \
+  playbooks/test_deploy_cukinia.yaml \
+  playbooks/test_deploy_cukinia_tests.yaml \
+  playbooks/test_run_cukinia.yaml
 
   # Create report
   mkdir $CUKINIA_TEST_DIR
