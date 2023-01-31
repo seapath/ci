@@ -8,7 +8,7 @@
 set -e
 
 die() {
-	echo "ci configuration failed: $@" 1>&2
+	echo "CI internal failure : $@" 1>&2
 	exit 1
 }
 
@@ -16,19 +16,16 @@ die() {
 usage()
 {
     cat <<EOF
+    This script is the main launcher for the SEAPATH CI.
+    It is separated in three functions in order to display logs properly.
+    They should be called one after another.
 USAGE:
-    ./launch.sh <pull-request-refs> <pull-request-sha>
+    ./launch.sh <config|setup|test>
 EOF
 }
 
-# Configure and prepare the CI
-configuration() {
-  if test "$#" -ne 2; then
-    usage
-    die "invalid usage"
-  fi
-
-  # Prerequisite
+# Download and prepare the pull request sources
+initialization() {
   if ! type -p cqfd > /dev/null; then
     die "cqfd not found"
   fi
@@ -38,13 +35,16 @@ configuration() {
   cd ansible
   git fetch -q origin ${GITHUB_REF}
   git checkout -q FETCH_HEAD
+  echo "Pull request sources got succesfully"
 
+  # Prepare ansible repository
   cqfd init
   cqfd -b prepare
+  echo "Sources prepared succesfully"
 }
 
-# Launch setup and hardening Debian
-setup_debian() {
+# Launch Debian configuration and hardening
+configure_debian() {
   cd ansible
   LOCAL_ANSIBLE_DIR=/home/virtu/ansible # Local dir that contains keys and inventories
   CQFD_EXTRA_RUN_ARGS="-v $LOCAL_ANSIBLE_DIR:/tmp" cqfd run ansible-playbook \
@@ -54,12 +54,11 @@ setup_debian() {
   playbooks/ci_restore_snapshot.yaml \
   playbooks/cluster_setup_debian.yaml \
   playbooks/cluster_setup_hardened_debian.yaml
+  echo "Debian set up succesfully"
 }
 
 # Prepare, launch test and upload test report
 launch_test() {
-  WORK_DIR=`pwd`
-
   cd ansible
   LOCAL_ANSIBLE_DIR=/home/virtu/ansible # Local dir that contains keys and inventories
   CQFD_EXTRA_RUN_ARGS="-v $LOCAL_ANSIBLE_DIR:/tmp" cqfd run ansible-playbook \
@@ -69,15 +68,15 @@ launch_test() {
   playbooks/test_deploy_cukinia.yaml \
   playbooks/test_deploy_cukinia_tests.yaml \
   playbooks/test_run_cukinia.yaml
+  echo "Test tools deployed successfully"
 
-  # Create report
-
+  # Generate test report
   CUKINIA_TEST_DIR=${WORK_DIR}/cukinia
   mkdir $CUKINIA_TEST_DIR
-  mv $WORK_DIR/ansible/*.xml $CUKINIA_TEST_DIR
-  cd $WORK_DIR/ci/report-generator
+  mv ${WORK_DIR}/ansible/*.xml $CUKINIA_TEST_DIR
+  cd ${WORK_DIR}/ci/report-generator
   cqfd -q init
-  if ! CQFD_EXTRA_RUN_ARGS="-v $CUKINIA_TEST_DIR:/tmp/cukinia-res" cqfd -q run; then
+  if ! CQFD_EXTRA_RUN_ARGS="-v ${CUKINIA_TEST_DIR}:/tmp/cukinia-res" cqfd -q run; then
     die "cqfd error"
   fi
 
@@ -91,7 +90,7 @@ launch_test() {
   git clone -q --depth 1 -b reports git@github.com:seapath/ci.git \
   --config core.sshCommand="ssh -i ~/.ssh/ci_rsa" $WORK_DIR/reports
   mkdir -p $REPORT_DIR
-  mv $WORK_DIR/ci/report-generator/main.pdf $REPORT_DIR/$REPORT_NAME
+  mv ${WORK_DIR}/ci/report-generator/main.pdf $REPORT_DIR/$REPORT_NAME
   cd $REPORT_DIR
   git config --local user.email "ci.seapath@gmail.com"
   git config --local user.name "Seapath CI"
@@ -100,22 +99,35 @@ launch_test() {
   git commit -q -m "upload report $REPORT_NAME"
   git push -q origin reports
 
-  # Give link
+  # Display test results
+  if grep -q "<failure" $CUKINIA_TEST_DIR/*; then
+    echo "Test fails"
+    RES=1
+  else
+    echo "All tests pass"
+    RES=0
+  fi
   echo See test Report at \
   https://github.com/seapath/ci/blob/reports/docs/reports/PR-${PR_N}/${REPORT_NAME}
 
-  # grep for succes
-  if grep -q "<failure" $CUKINIA_TEST_DIR/*; then
-    RES=1
-  else
-    RES=0
-  fi
-
-  # remove github clone dir and cukinia test dir
-  rm -rf $WORK_DIR
   exit $RES
 }
 
-configuration
-setup
-test
+case "$1" in
+  init)
+    initialization
+    exit 0
+    ;;
+  conf)
+    configure_debian
+    exit 0
+    ;;
+  test)
+    launch_test
+    exit 0
+    ;;
+  *)
+    usage
+    die "Unknown command"
+    ;;
+esac
