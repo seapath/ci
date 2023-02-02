@@ -20,7 +20,7 @@ usage()
     It is separated in three functions in order to display logs properly.
     They should be called one after another.
 USAGE:
-    ./launch.sh <config|setup|test>
+    ./launch.sh <init|conf|test>
 EOF
 }
 
