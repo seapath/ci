@@ -51,9 +51,7 @@ configure_debian() {
   -i /tmp/seapath_inventories/seapath_cluster_ci.yml \
   -i /tmp/seapath_inventories/seapath_ovs_ci.yml \
   --key-file /tmp/ci_rsa --skip-tags "package-install" \
-  playbooks/ci_restore_snapshot.yaml \
-  playbooks/cluster_setup_debian.yaml \
-  playbooks/cluster_setup_hardened_debian.yaml
+  playbooks/ci_configure.yaml
   echo "Debian set up succesfully"
 }
 
@@ -65,9 +63,7 @@ launch_test() {
   -i /tmp/seapath_inventories/seapath_cluster_ci.yml \
   -i /tmp/seapath_inventories/seapath_ovs_ci.yml \
   --key-file /tmp/ci_rsa --skip-tags "package-install" \
-  playbooks/test_deploy_cukinia.yaml \
-  playbooks/test_deploy_cukinia_tests.yaml \
-  playbooks/test_run_cukinia.yaml
+  playbooks/ci_test.yaml
   echo "Test tools deployed successfully"
 
   # Generate test report
