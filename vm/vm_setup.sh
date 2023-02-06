@@ -73,4 +73,5 @@ chown -R root:root /root/.ssh/
 chown -R virtu:virtu /home/virtu/.ssh
 chmod 700 /root/.ssh/ /home/virtu/.ssh
 chmod 600 /root/.ssh/authorized_keys /home/virtu/.ssh/authorized_keys
-
+cp -r /boot/efi/EFI/debian /boot/efi/EFI/BOOT/
+cp /boot/efi/EFI/BOOT/shimx64.efi /boot/efi/EFI/BOOT/BOOTX64.EFI
