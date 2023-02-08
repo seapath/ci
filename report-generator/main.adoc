@@ -12,11 +12,7 @@ Test report
 :iconsdir: ./doc/icons/
 :sectnumlevels: 1
 
-include::include/prerequisites.adoc[]
-
 include::include/test-reports.adoc[]
-
-include::include/notes.adoc[]
 
 == About this documentation
 
