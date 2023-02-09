@@ -35,13 +35,24 @@ initialization() {
   cd ansible
   git fetch -q origin ${GITHUB_REF}
   git checkout -q FETCH_HEAD
-  echo "Pull request sources got succesfully"
+  echo "Pull request sources downloaded succesfully"
 
   # Prepare ansible repository
   echo "ansible-lint == 5.4" >> .cqfd/docker/requirements.txt
   cqfd init
   cqfd -b prepare
   echo "Sources prepared succesfully"
+}
+
+# Launch ansible-lint
+ansible_lint() {
+  cd ansible
+  INVENTORIES_DIR=/home/virtu/ansible/seapath_inventories
+  CQFD_EXTRA_RUN_ARGS=" \
+    -v $INVENTORIES_DIR:/etc/ansible/hosts \
+    -v $WORK_DIR/ansible/ceph-ansible/roles:/etc/ansible/roles \
+    " \
+  cqfd run ansible-lint -x yaml
 }
 
 case "$1" in
