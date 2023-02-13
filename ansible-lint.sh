@@ -46,13 +46,14 @@ initialization() {
 
 # Launch ansible-lint
 ansible_lint() {
+  cp ci/ansible-lint.conf ansible
   cd ansible
   INVENTORIES_DIR=/home/virtu/ansible/seapath_inventories
   CQFD_EXTRA_RUN_ARGS=" \
     -v $INVENTORIES_DIR:/etc/ansible/hosts \
     -v $WORK_DIR/ansible/ceph-ansible/roles:/etc/ansible/roles \
     " \
-  cqfd run ansible-lint -x yaml
+  cqfd run ansible-lint -c ansible-lint.conf
 }
 
 case "$1" in
