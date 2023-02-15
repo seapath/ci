@@ -10,6 +10,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 	asciidoc \
 	bash \
 	locales \
+	python3-matplotlib \
 	ruby \
 	ruby-asciidoctor-pdf \
 	xmlstarlet \
