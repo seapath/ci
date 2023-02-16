@@ -57,8 +57,9 @@ configure_debian() {
   echo "Debian set up succesfully"
 }
 
-# Prepare, launch test and upload test report
-launch_test() {
+# Prepare and launch cukinia test
+# Send the result of the tests as return code
+launch_system_tests() {
   cd ansible
   LOCAL_ANSIBLE_DIR=/home/virtu/ansible # Local dir that contains keys and inventories
   CQFD_EXTRA_RUN_ARGS="-v $LOCAL_ANSIBLE_DIR:/tmp/ci-seapath-github" \
@@ -70,18 +71,36 @@ launch_test() {
   playbooks/ci_test.yaml
   echo "Test tools deployed successfully"
 
+  # Display test results
+  if grep -q "<failure" $CUKINIA_TEST_DIR/*; then
+    echo "Test fails"
+    exit 1
+  else
+    echo "All tests pass"
+    exit 0
+  fi
+}
+
+# Deploy subscriber and publisher, generate SV and measure latency time
+launch_latency_tests() {
+  # TODO
+}
+
+# Generate the test report and upload it
+generate_report() {
+
   # Generate test report
   CUKINIA_TEST_DIR=${WORK_DIR}/cukinia
   mkdir $CUKINIA_TEST_DIR
   mv ${WORK_DIR}/ansible/*.xml $CUKINIA_TEST_DIR
   cd ${WORK_DIR}/ci/report-generator
+  # TODO: Generate and add latency graphs
   cqfd -q init
   if ! CQFD_EXTRA_RUN_ARGS="-v ${CUKINIA_TEST_DIR}:/tmp/cukinia-res" cqfd -q run; then
     die "cqfd error"
   fi
 
   # Upload report
-
   PR_N=`echo $GITHUB_REF | cut -d '/' -f 3`
   TIME=`date +%F_%Hh%Mm%S`
   REPORT_NAME=test-report_${GITHUB_RUN_ID}_${GITHUB_RUN_ATTEMPT}_${TIME}.pdf
@@ -99,18 +118,8 @@ launch_test() {
   git commit -q -m "upload report $REPORT_NAME"
   git push -q origin reports
 
-  # Display test results
-  if grep -q "<failure" $CUKINIA_TEST_DIR/*; then
-    echo "Test fails"
-    RES=1
-  else
-    echo "All tests pass"
-    RES=0
-  fi
   echo See test Report at \
   https://github.com/seapath/ci/blob/reports/docs/reports/PR-${PR_N}/${REPORT_NAME}
-
-  exit $RES
 }
 
 case "$1" in
@@ -122,8 +131,16 @@ case "$1" in
     configure_debian
     exit 0
     ;;
-  test)
-    launch_test
+  system)
+    launch_system_tests
+    exit 0
+    ;;
+  latency)
+    launch_latency_tests
+    exit 0
+    ;;
+  report)
+    generate_report
     exit 0
     ;;
   *)
