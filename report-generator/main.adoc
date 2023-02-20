@@ -1,7 +1,6 @@
 // Copyright (C) 2022, Savoir-faire Linux (https://www.savoirfairelinux.com)
 // SPDX-License-Identifier: CC-BY-4.0
 
-:imagesdir: ./doc/images/
 :pdf-theme: themes/theme.yml
 :doctype: book
 
