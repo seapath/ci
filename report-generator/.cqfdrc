@@ -4,3 +4,7 @@ name='asciidoc-report'
 
 [build]
 command='./compile.sh -s -i /tmp/cukinia-res'
+flavors='build_latency'
+
+[build_latency]
+command='./compile_latency.sh /tmp/tests_results/'
