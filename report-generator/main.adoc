@@ -31,4 +31,4 @@ If you prefer a PDF version of the documentation instead, use the following
 command (the dblatex package will need to be installed on your Linux
 distribution):
 
-  $ asciidoctor-pdf main.adoc
+  $ asciidoctor-pdf main_latency.adoc
