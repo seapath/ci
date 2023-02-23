@@ -12,6 +12,7 @@ Test report
 :sectnumlevels: 1
 
 include::include/test-reports.adoc[]
+include::include/latency-test-reports.adoc[]
 
 == About this documentation
 
@@ -31,4 +32,4 @@ If you prefer a PDF version of the documentation instead, use the following
 command (the dblatex package will need to be installed on your Linux
 distribution):
 
-  $ asciidoctor-pdf main_latency.adoc
+  $ asciidoctor-pdf main.adoc
