@@ -83,7 +83,17 @@ launch_system_tests() {
 
 # Deploy subscriber and publisher, generate SV and measure latency time
 launch_latency_tests() {
-  # TODO
+  cd ansible
+  LOCAL_ANSIBLE_DIR=/home/virtu/ansible # Local dir that contains keys and inventories
+  CQFD_EXTRA_RUN_ARGS="-v $LOCAL_ANSIBLE_DIR:/tmp/ci-seapath-github" \
+  cqfd run ansible-playbook \
+  -i /tmp/ci-seapath-github/seapath_inventories/seapath_cluster_ci.yml \
+  -i /tmp/ci-seapath-github/seapath_inventories/seapath_ovs_ci.yml \
+  --key-file /tmp/ci-seapath-github/ci_rsa \
+  --skip-tags "package-install" \
+  playbooks/test_run_latency_tests.yaml
+
+  # TODO : Add return value : false if we exceed may latency
 }
 
 # Generate the test report and upload it
