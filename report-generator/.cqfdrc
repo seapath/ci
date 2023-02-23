@@ -3,8 +3,11 @@ org='sfl'
 name='asciidoc-report'
 
 [build]
-command='./compile.sh -s -i /tmp/cukinia-res'
-flavors='build_latency'
+command='asciidoctor-pdf main.adoc'
+flavors='generate_latency_part generate_test_part'
 
-[build_latency]
+[generate_latency_part]
 command='./compile_latency.sh /tmp/tests_results/'
+
+[generate_test_part]
+command='./compile.sh -s -i /tmp/cukinia-res'
