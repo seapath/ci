@@ -69,7 +69,18 @@ launch_system_tests() {
   --key-file /tmp/ci-seapath-github/ci_rsa \
   --skip-tags "package-install" \
   playbooks/ci_test.yaml
-  echo "Test tools deployed successfully"
+  echo "System tests launched successfully"
+
+  # Generate test report part
+  CUKINIA_TEST_DIR=${WORK_DIR}/cukinia
+  mkdir $CUKINIA_TEST_DIR
+  mv ${WORK_DIR}/ansible/*.xml $CUKINIA_TEST_DIR
+  cd ${WORK_DIR}/ci/report-generator
+  cqfd -q init
+  if ! CQFD_EXTRA_RUN_ARGS="-v ${CUKINIA_TEST_DIR}:/tmp/cukinia-res" \
+    cqfd -q -b generate_test_part; then
+    die "cqfd error"
+  fi
 
   # Display test results
   if grep -q "<failure" $CUKINIA_TEST_DIR/*; then
@@ -83,15 +94,32 @@ launch_system_tests() {
 
 # Deploy subscriber and publisher, generate SV and measure latency time
 launch_latency_tests() {
+  # TODO : it is better not to copy these tar every time.
+  # They should be either acces via docker or rebuild every time.
+  # Rebuild them is better but they should then be open sourced
+  cp /home/virtu/ci-latency-tools/IEC61850_svtools/svtools_0c7b539.tar \
+    $WORK_DIR/ansible/src/svtools
+  cp /home/virtu/ci-latency-tools/sv_generator/trafgen_a8936ce.tar \
+    $WORK_DIR/ansible/src/trafgen
   cd ansible
   LOCAL_ANSIBLE_DIR=/home/virtu/ansible # Local dir that contains keys and inventories
   CQFD_EXTRA_RUN_ARGS="-v $LOCAL_ANSIBLE_DIR:/tmp/ci-seapath-github" \
   cqfd run ansible-playbook \
   -i /tmp/ci-seapath-github/seapath_inventories/seapath_cluster_ci.yml \
-  -i /tmp/ci-seapath-github/seapath_inventories/seapath_ovs_ci.yml \
+  -i /tmp/ci-seapath-github/seapath_inventories/seapath_standalone_rt.yml \
   --key-file /tmp/ci-seapath-github/ci_rsa \
   --skip-tags "package-install" \
   playbooks/test_run_latency_tests.yaml
+
+  # Generate latency report part
+  LATENCY_TEST_DIR=${WORK_DIR}/latency
+  mkdir $LATENCY_TEST_DIR
+  mv ${WORK_DIR}/ansible/tests_results/* $LATENCY_TEST_DIR
+  cd ${WORK_DIR}/ci/report-generator
+  if ! CQFD_EXTRA_RUN_ARGS="-v $LATENCY_TEST_DIR:/tmp/tests_results" \
+    cqfd -q -b generate_latency_part; then
+    die "cqfd error"
+  fi
 
   # TODO : Add return value : false if we exceed may latency
 }
@@ -99,16 +127,19 @@ launch_latency_tests() {
 # Generate the test report and upload it
 generate_report() {
 
-  # Generate test report
-  CUKINIA_TEST_DIR=${WORK_DIR}/cukinia
-  mkdir $CUKINIA_TEST_DIR
-  mv ${WORK_DIR}/ansible/*.xml $CUKINIA_TEST_DIR
+  # Generate pdf
   cd ${WORK_DIR}/ci/report-generator
-  # TODO: Generate and add latency graphs
-  cqfd -q init
-  if ! CQFD_EXTRA_RUN_ARGS="-v ${CUKINIA_TEST_DIR}:/tmp/cukinia-res" cqfd -q run; then
+  touch include/latency-test-reports.adoc
+  if ! cqfd -q run; then
     die "cqfd error"
   fi
+  # If the cukinia tests fail, the CI will not launch the latency tests.
+  # In that case, the pdf generation will fail cause the file
+  # include/latency-test-reports.adoc doesn't exist.
+  # To avoid that problem, the file is touch before launching cqfd.
+  # If the latency tests are launched, this file already exists and the touch
+  # do nothing
+  echo "Test report generated successfully"
 
   # Upload report
   PR_N=`echo $GITHUB_REF | cut -d '/' -f 3`
@@ -127,6 +158,7 @@ generate_report() {
   git add $REPORT_NAME
   git commit -q -m "upload report $REPORT_NAME"
   git push -q origin reports
+  echo "Test report uploaded successfully"
 
   echo See test Report at \
   https://github.com/seapath/ci/blob/reports/docs/reports/PR-${PR_N}/${REPORT_NAME}
