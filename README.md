@@ -8,12 +8,15 @@ A user guide of the CI is available on [the Wiki page](https://wiki.lfenergy.org
 
 The CI is called through a GitHub Action on Ansible debian-main branch. The script is contained in `.github/workflows/ci-debian.yml`
 
-It is separated in three functions.
+It is separated in five functions.
 - `initialization` which download and prepare Ansible sources to test
 - `configure_debian` which setup and hardened Debian
-- `launch_test` which deploy tests, run it and upload the test report
+- `launch_system_test` which deploy cukinia tests, and run it.
+- `launch_latency_tests` which launch latency tests on the cluster.
+- `generate_report` which generate and upload the final report.
 
 Every of these functions is called in a different step in the GitHub Action in order to get categorized logs.
+Every of these function can fail and this will be visible in the steps on Github.
 
 ### Initialization
 
@@ -28,11 +31,19 @@ Every of these command are run through Ansible inside a docker container with th
 This `configure_debian` part can fail if there is a problem in the Ansible playbooks of the pull request. In that case, the CI will stop there and will not create any test report. This is of course visible on the GitHub action logs.
 This is the only step of the CI that can fail.
 
-### Tests
+### System tests
 
 If configuration is done correctly, the testing process will begin using Ansible and cqfd again.
 The test software [Cukinia](https://github.com/savoirfairelinux/cukinia) is deployed on the machine along with test configuration files. The tests are launched and the xml result file is copied back to the runner.
-A report generator contained on this CI repository transform this xml file into a beautiful pdf. This report is then uploaded on the branch `reports` on this repository and the link is echo at the end of the script.
 
-The CI end by testing if some failures are present in the xml file and sending an appropriate exit code. This is used in GitHub action to display the CI as failed.
+### Latency tests
+
+In order to fit to the IEC-61850 norm, latency tests are run on all cluster machines. Each hypervisor embed a subscriber programm that will receive Sample Values from a unique publisher.
+All results will then be gathered in graphs in order to be integrated in the report.
+This step only launched if the system tests step is succesful.
+
+### Report Generation
+
+A report generator contained on this CI repository transform this the cukinia xml file and the latency graphs into a beautiful pdf. This report is then uploaded on the branch `reports` on this repository and the link is echo at the end of the script.
+
 Finally, a clean process removes the temporary directory.
