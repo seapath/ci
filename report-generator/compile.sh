@@ -148,6 +148,3 @@ if [ -z "$XML_SRC_DIR" ] || [ ! -d "$XML_SRC_DIR" ] ; then
 fi
 
 integrate_all
-asciidoctor-pdf main.adoc
-
-rm $TEST_ADOC_FILE

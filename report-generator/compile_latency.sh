@@ -68,5 +68,3 @@ add_latency_results()
 }
 
 add_latency_results $1
-asciidoctor-pdf main_latency.adoc
-rm $LATENCY_ADOC_FILE
