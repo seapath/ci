@@ -84,7 +84,7 @@ launch_system_tests() {
 
   # Display test results
   if grep -q "<failure" $CUKINIA_TEST_DIR/*; then
-    echo "Test fails"
+    echo "Test fails, See test report in the section 'Upload test report'"
     exit 1
   else
     echo "All tests pass"
@@ -120,6 +120,8 @@ launch_latency_tests() {
     cqfd -q -b generate_latency_part; then
     die "cqfd error"
   fi
+  
+  echo "See latency report in the section 'Upload test report'"
 
   # TODO : Add return value : false if we exceed may latency
 }
