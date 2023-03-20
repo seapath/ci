@@ -82,8 +82,16 @@ launch_system_tests() {
     die "cqfd error"
   fi
 
+  # Check for kernel backtrace error. This is a random error so it must not
+  # stop the CI but just display a warning
+  # See https://github.com/seapath/ansible/issues/164
+  if grep '<failure' $CUKINIA_TEST_DIR/* | grep -q '00080'; then
+     echo -e "\033[0;33mWarning :\033[0m kernel back trace detected, see \
+         https://github.com/seapath/ansible/issues/164"
+  fi
+
   # Display test results
-  if grep -q "<failure" $CUKINIA_TEST_DIR/*; then
+  if grep -q '<failure' $CUKINIA_TEST_DIR/* | grep -q -v '00080'; then
     echo "Test fails, See test report in the section 'Upload test report'"
     exit 1
   else
