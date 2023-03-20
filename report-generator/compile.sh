@@ -113,10 +113,11 @@ add_xml_to_adoc()
         echo "|Tests |Results" >> "$TEST_ADOC_FILE"
 
         local j=1
-        while read testcase ; do
+        local testcases=$(xmlstarlet sel -t -v "//testsuite[$i]/testcase/@name" "$xml")
+        echo "$testcases" | while read testcase ; do
             generate_row "$i" "$j" "$testcase" "$xml"
             let j++
-        done < <(xmlstarlet sel -t -v "//testsuite[$i]/testcase/@name" "$xml")
+        done
         echo "|===" >> "$TEST_ADOC_FILE"
         echo "{set:cellbgcolor!}" >> "$TEST_ADOC_FILE"
         echo "" >> "$TEST_ADOC_FILE"
