@@ -4,6 +4,20 @@ This repository hosts the code of the CI used on the Ansible repository.
 
 A user guide of the CI is available on [the Wiki page](https://wiki.lfenergy.org/display/SEAP/Continuous+integration+on+SEAPATH).
 
+## Prerequisites
+
+To use CI you must create the file /etc/seapath-ci.conf.This file is a shell
+source file where it can be defined variables used by the CI script.
+Only `PRIVATE_INVENTORIES_REPO_URL` is mandatory.
+- `PRIVATE_INVENTORIES_REPO_URL`: git URL to fetch inventories
+- `SEAPATH_BASE_REPO`: git main URL part. eg: github.com/seapath
+- `SEAPATH_SSH_BASE_REPO`: git main ssh URL part. eg: git@github.com:seapath
+- `REPO_PRIVATE_KEYFILE`: path of the SSH git private key used for pushing the report.
+- `ANSIBLE_INVENTORY`: Ansible inventory environment variable as described here: https://docs.ansible.com/ansible/latest/reference_appendices/config.html#envvar-ANSIBLE_INVENTORY
+- `SVTOOLS_TARBALL`: path to the svtools binary tarball
+- `TRAFGEN_TARBALL`: path to the tafgen binary tarball
+- `CA_DIR`: path to the directory containing syslog certificate
+
 ## Technical implementation
 
 The CI is called through a GitHub Action on Ansible debian-main branch. The script is contained in `.github/workflows/ci-debian.yml`

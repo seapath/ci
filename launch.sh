@@ -5,12 +5,53 @@
 #
 # This script download the sources of a specific pull request,
 # then test it and upload a report given the test results.
+
+
+if [ "${RUNNER_DEBUG}" == "1" ] ; then
+set -x
+fi
 set -e
 
 die() {
 	echo "CI internal failure : $@" 1>&2
 	exit 1
 }
+
+# Source CI configuration file
+# This file must at least define the PRIVATE_INVENTORIES_REPO_URL variable
+source /etc/seapath-ci.conf
+
+if [ -z "${PRIVATE_INVENTORIES_REPO_URL}" ] ; then
+  die "PRIVATE_INVENTORIES_REPO_URL not defined!"
+fi
+
+# default variables
+if [ -z "${SEAPATH_BASE_REPO}" ] ; then
+    SEAPATH_BASE_REPO="github.com/seapath"
+fi
+if [ -z "${SEAPATH_SSH_BASE_REPO}" ] ; then
+    SEAPATH_SSH_BASE_REPO="git@github.com:seapath"
+fi
+if [ -z "${REPO_PRIVATE_KEYFILE}" ] ; then
+  REPO_PRIVATE_KEYFILE=/home/virtu/ansible/ci_rsa
+fi
+if [ -z "${ANSIBLE_INVENTORY}" ] ; then
+  ANSIBLE_INVENTORY="inventories_private/seapath_cluster_ci.yml,inventories_private/seapath_standalone_rt.yml"
+fi
+if [ -z "${SVTOOLS_TARBALL}" ] ; then
+  SVTOOLS_TARBALL="/home/virtu/ci-latency-tools/IEC61850_svtools/"
+fi
+if [ -z "${TRAFGEN_TARBALL}" ] ; then
+  TRAFGEN_TARBALL="/home/virtu/ci-latency-tools/sv_generator/"
+fi
+
+CQFD_EXTRA_RUN_ARGS="-v $REPO_PRIVATE_KEYFILE:/tmp/ci_ssh_key -e ANSIBLE_INVENTORY=${ANSIBLE_INVENTORY} -v ${SVTOOLS_TARBALL}:$WORK_DIR/ansible/src/svtools/ -v ${TRAFGEN_TARBALL}:$WORK_DIR/ansible/src/trafgen/"
+
+if [ -n "${CA_DIR}" ] ; then
+  CQFD_EXTRA_RUN_ARGS="${CQFD_EXTRA_RUN_ARGS} -v ${CA_DIR}:$WORK_DIR/ansible/src/ca"
+fi
+
+export CQFD_EXTRA_RUN_ARGS
 
 # Standard help message
 usage()
@@ -31,11 +72,14 @@ initialization() {
   fi
 
   # Get sources
-  git clone -q https://github.com/seapath/ansible
+  git clone -q "https://${SEAPATH_BASE_REPO}/ansible"
   cd ansible
-  git fetch -q origin ${GITHUB_REF}
+  git fetch -q origin "${GITHUB_REF}"
   git checkout -q FETCH_HEAD
   echo "Pull request sources got succesfully"
+
+  # Get inventories
+  git clone -q "${PRIVATE_INVENTORIES_REPO_URL}" inventories_private
 
   # Prepare ansible repository
   cqfd init
@@ -46,12 +90,8 @@ initialization() {
 # Launch Debian configuration and hardening
 configure_debian() {
   cd ansible
-  LOCAL_ANSIBLE_DIR=/home/virtu/ansible # Local dir that contains keys and inventories
-  CQFD_EXTRA_RUN_ARGS="-v $LOCAL_ANSIBLE_DIR:/tmp/ci-seapath-github" \
   cqfd run ansible-playbook \
-  -i /tmp/ci-seapath-github/seapath_inventories/seapath_cluster_ci.yml \
-  -i /tmp/ci-seapath-github/seapath_inventories/seapath_ovs_ci.yml \
-  --key-file /tmp/ci-seapath-github/ci_rsa \
+  --key-file /tmp/ci_ssh_key \
   --skip-tags "package-install" \
   playbooks/ci_configure.yaml
   echo "Debian set up succesfully"
@@ -61,12 +101,8 @@ configure_debian() {
 # Send the result of the tests as return code
 launch_system_tests() {
   cd ansible
-  LOCAL_ANSIBLE_DIR=/home/virtu/ansible # Local dir that contains keys and inventories
-  CQFD_EXTRA_RUN_ARGS="-v $LOCAL_ANSIBLE_DIR:/tmp/ci-seapath-github" \
   cqfd run ansible-playbook \
-  -i /tmp/ci-seapath-github/seapath_inventories/seapath_cluster_ci.yml \
-  -i /tmp/ci-seapath-github/seapath_inventories/seapath_ovs_ci.yml \
-  --key-file /tmp/ci-seapath-github/ci_rsa \
+  --key-file /tmp/ci_ssh_key \
   --skip-tags "package-install" \
   playbooks/ci_test.yaml
   echo "System tests launched successfully"
@@ -102,33 +138,22 @@ launch_system_tests() {
 
 # Deploy subscriber and publisher, generate SV and measure latency time
 launch_latency_tests() {
-  # TODO : it is better not to copy these tar every time.
-  # They should be either acces via docker or rebuild every time.
-  # Rebuild them is better but they should then be open sourced
-  cp /home/virtu/ci-latency-tools/IEC61850_svtools/svtools_0c7b539.tar \
-    $WORK_DIR/ansible/src/svtools
-  cp /home/virtu/ci-latency-tools/sv_generator/trafgen_a8936ce.tar \
-    $WORK_DIR/ansible/src/trafgen
   cd ansible
-  LOCAL_ANSIBLE_DIR=/home/virtu/ansible # Local dir that contains keys and inventories
-  CQFD_EXTRA_RUN_ARGS="-v $LOCAL_ANSIBLE_DIR:/tmp/ci-seapath-github" \
   cqfd run ansible-playbook \
-  -i /tmp/ci-seapath-github/seapath_inventories/seapath_cluster_ci.yml \
-  -i /tmp/ci-seapath-github/seapath_inventories/seapath_standalone_rt.yml \
-  --key-file /tmp/ci-seapath-github/ci_rsa \
+  --key-file /tmp/ci_ssh_key \
   --skip-tags "package-install" \
   playbooks/test_run_latency_tests.yaml
 
   # Generate latency report part
-  LATENCY_TEST_DIR=${WORK_DIR}/latency
+  LATENCY_TEST_DIR="${WORK_DIR}/latency"
   mkdir $LATENCY_TEST_DIR
-  mv ${WORK_DIR}/ansible/tests_results/* $LATENCY_TEST_DIR
+  mv -v ${WORK_DIR}/ansible/tests_results/* $LATENCY_TEST_DIR
   cd ${WORK_DIR}/ci/report-generator
   if ! CQFD_EXTRA_RUN_ARGS="-v $LATENCY_TEST_DIR:/tmp/tests_results" \
     cqfd -q -b generate_latency_part; then
     die "cqfd error"
   fi
-  
+
   echo "See latency report in the section 'Upload test report'"
 
   # TODO : Add return value : false if we exceed may latency
@@ -138,9 +163,9 @@ launch_latency_tests() {
 generate_report() {
 
   # Generate pdf
-  cd ${WORK_DIR}/ci/report-generator
+  cd "${WORK_DIR}/ci/report-generator"
   touch include/latency-test-reports.adoc
-  if ! cqfd -q run; then
+  if ! CQFD_EXTRA_RUN_ARGS="" cqfd -q run; then
     die "cqfd error"
   fi
   # If the cukinia tests fail, the CI will not launch the latency tests.
@@ -154,24 +179,24 @@ generate_report() {
   # Upload report
   PR_N=`echo $GITHUB_REF | cut -d '/' -f 3`
   TIME=`date +%F_%Hh%Mm%S`
-  REPORT_NAME=test-report_${GITHUB_RUN_ID}_${GITHUB_RUN_ATTEMPT}_${TIME}.pdf
-  REPORT_DIR=${WORK_DIR}/reports/docs/reports/PR-${PR_N}
+  REPORT_NAME="test-report_${GITHUB_RUN_ID}_${GITHUB_RUN_ATTEMPT}_${TIME}.pdf"
+  REPORT_DIR="${WORK_DIR}/reports/docs/reports/PR-${PR_N}"
 
-  git clone -q --depth 1 -b reports git@github.com:seapath/ci.git \
-  --config core.sshCommand="ssh -i ~/.ssh/ci_rsa" $WORK_DIR/reports
-  mkdir -p $REPORT_DIR
-  mv ${WORK_DIR}/ci/report-generator/main.pdf $REPORT_DIR/$REPORT_NAME
-  cd $REPORT_DIR
+  git clone -q --depth 1 -b reports "${SEAPATH_SSH_BASE_REPO}/ci.git" \
+  --config core.sshCommand="ssh -i ~/.ssh/ci_rsa" "$WORK_DIR/reports"
+  mkdir -p "$REPORT_DIR"
+  mv "${WORK_DIR}"/ci/report-generator/main.pdf "$REPORT_DIR/$REPORT_NAME"
+  cd "$REPORT_DIR"
   git config --local user.email "ci.seapath@gmail.com"
   git config --local user.name "Seapath CI"
   git config --local core.sshCommand "ssh -i ~/.ssh/ci_rsa"
-  git add $REPORT_NAME
+  git add "$REPORT_NAME"
   git commit -q -m "upload report $REPORT_NAME"
   git push -q origin reports
   echo "Test report uploaded successfully"
 
   echo See test Report at \
-  https://github.com/seapath/ci/blob/reports/docs/reports/PR-${PR_N}/${REPORT_NAME}
+  "https://${SEAPATH_BASE_REPO}/ci/blob/reports/docs/reports/PR-${PR_N}/${REPORT_NAME}"
 }
 
 case "$1" in
