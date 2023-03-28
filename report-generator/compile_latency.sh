@@ -44,7 +44,7 @@ add_latency_results()
     echo "==  Latency tests results ==" >> "$LATENCY_ADOC_FILE"
     local TESTS_RESULTS_DIR=$1
     local SUB_RESULTS_FILES_HYPERVISOR="${TESTS_RESULTS_DIR}sub*hypervisor*" # Getting all sub files results
-    local PUB_RESULT_FILE_HYPERVISOR="${TESTS_RESULTS_DIR}/pub_results_hypervisor_standalone" # Publisher file result
+    local PUB_RESULT_FILE_HYPERVISOR="${TESTS_RESULTS_DIR}/pub_results_hypervisor_*" # Publisher file result
 
     # Compute hypervisor subscriber tests results
     for SUB_RESULT_FILE in $SUB_RESULTS_FILES_HYPERVISOR # For each sub result file
