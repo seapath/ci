@@ -33,8 +33,9 @@ if [ -z "${SEAPATH_SSH_BASE_REPO}" ] ; then
     SEAPATH_SSH_BASE_REPO="git@github.com:seapath"
 fi
 if [ -z "${REPO_PRIVATE_KEYFILE}" ] ; then
-  REPO_PRIVATE_KEYFILE=/home/virtu/ansible/ci_rsa
+  REPO_PRIVATE_KEYFILE=inventories_private/ci_rsa
 fi
+
 if [ -z "${ANSIBLE_INVENTORY}" ] ; then
   ANSIBLE_INVENTORY="inventories_private/seapath_cluster_ci.yml,inventories_private/seapath_standalone_rt.yml"
 fi
@@ -45,7 +46,15 @@ if [ -z "${TRAFGEN_TARBALL}" ] ; then
   TRAFGEN_TARBALL="/home/virtu/ci-latency-tools/sv_generator/"
 fi
 
-CQFD_EXTRA_RUN_ARGS="-v $REPO_PRIVATE_KEYFILE:/tmp/ci_ssh_key -e ANSIBLE_INVENTORY=${ANSIBLE_INVENTORY} -v ${SVTOOLS_TARBALL}:$WORK_DIR/ansible/src/svtools/ -v ${TRAFGEN_TARBALL}:$WORK_DIR/ansible/src/trafgen/"
+CQFD_EXTRA_RUN_ARGS="-e ANSIBLE_INVENTORY=${ANSIBLE_INVENTORY} -v ${SVTOOLS_TARBALL}:$WORK_DIR/ansible/src/svtools/ -v ${TRAFGEN_TARBALL}:$WORK_DIR/ansible/src/trafgen/"
+
+# If REPO_PRIVATE_KEYFILE is an absolute path bind it inside cqfd
+if [[ "${REPO_PRIVATE_KEYFILE}" == /* ]] ; then
+  CQFD_EXTRA_RUN_ARGS="${CQFD_EXTRA_RUN_ARGS} -v $REPO_PRIVATE_KEYFILE:/tmp/ci_ssh_key "
+  PRIVATE_KEYFILE_PATH=/tmp/ci_ssh_key
+else
+  PRIVATE_KEYFILE_PATH="${REPO_PRIVATE_KEYFILE}"
+fi
 
 if [ -n "${CA_DIR}" ] ; then
   CQFD_EXTRA_RUN_ARGS="${CQFD_EXTRA_RUN_ARGS} -v ${CA_DIR}:$WORK_DIR/ansible/src/ca"
@@ -86,6 +95,7 @@ initialization() {
 
   # Get inventories
   git clone -q "${PRIVATE_INVENTORIES_REPO_URL}" inventories_private
+  chmod 600 "${PRIVATE_KEYFILE_PATH}"
 
   # Prepare ansible repository
   cqfd init
@@ -97,7 +107,7 @@ initialization() {
 configure_debian() {
   cd ansible
   cqfd run ansible-playbook \
-  --key-file /tmp/ci_ssh_key \
+  --key-file "${PRIVATE_KEYFILE_PATH}" \
   --skip-tags "package-install" \
   playbooks/ci_configure.yaml
   echo "Debian set up succesfully"
@@ -108,7 +118,7 @@ configure_debian() {
 launch_system_tests() {
   cd ansible
   cqfd run ansible-playbook \
-  --key-file /tmp/ci_ssh_key \
+  --key-file "${PRIVATE_KEYFILE_PATH}" \
   --skip-tags "package-install" \
   playbooks/ci_test.yaml
   echo "System tests launched successfully"
@@ -146,7 +156,7 @@ launch_system_tests() {
 launch_latency_tests() {
   cd ansible
   cqfd run ansible-playbook \
-  --key-file /tmp/ci_ssh_key \
+  --key-file "${PRIVATE_KEYFILE_PATH}" \
   --skip-tags "package-install" \
   playbooks/test_run_latency_tests.yaml
 
