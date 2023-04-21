@@ -58,10 +58,16 @@ usage()
 {
     cat <<EOF
     This script is the main launcher for the SEAPATH CI.
-    It is separated in three functions in order to display logs properly.
+    It is separated in many functions in order to display logs properly.
     They should be called one after another.
 USAGE:
-    ./launch.sh <init|conf|test>
+    ./launch.sh <init|conf|system|latency|report>
+DESCRIPTION:
+    - init : download and prepare the sources.
+    - conf : configure the debian OS to build SEAPATH.
+    - system : launch system tests and gather results.
+    - latency: launch latency tests and gather results.
+    - report: build and upload the test report.
 EOF
 }
 
