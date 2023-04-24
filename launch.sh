@@ -94,7 +94,7 @@ initialization() {
   echo "Pull request sources got succesfully"
 
   # Get inventories
-  git clone -q "${PRIVATE_INVENTORIES_REPO_URL}" inventories_private
+  git clone -b certificicates_in_inv_repo -q "${PRIVATE_INVENTORIES_REPO_URL}" inventories_private
   chmod 600 "${PRIVATE_KEYFILE_PATH}"
 
   # Prepare ansible repository
