@@ -143,7 +143,7 @@ launch_system_tests() {
   fi
 
   # Display test results
-  if grep -q '<failure' $CUKINIA_TEST_DIR/* | grep -q -v '00080'; then
+  if grep '<failure' $CUKINIA_TEST_DIR/* | grep -q -v '00080'; then
     echo "Test fails, See test report in the section 'Upload test report'"
     exit 1
   else
