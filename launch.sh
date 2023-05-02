@@ -124,26 +124,25 @@ launch_system_tests() {
   echo "System tests launched successfully"
 
   # Generate test report part
-  CUKINIA_TEST_DIR=${WORK_DIR}/cukinia
-  mkdir $CUKINIA_TEST_DIR
-  mv ${WORK_DIR}/ansible/*.xml $CUKINIA_TEST_DIR
+  INCLUDE_DIR=${WORK_DIR}/ci/report-generator/include
+  mv ${WORK_DIR}/ansible/*.xml $INCLUDE_DIR # Test files
+  cp ${WORK_DIR}/ansible/src/cukinia-tests/*.csv $INCLUDE_DIR # Compliance matrix
   cd ${WORK_DIR}/ci/report-generator
   cqfd -q init
-  if ! CQFD_EXTRA_RUN_ARGS="-v ${CUKINIA_TEST_DIR}:/tmp/cukinia-res" \
-    cqfd -q -b generate_test_part; then
+  if ! cqfd -q -b generate_test_part; then
     die "cqfd error"
   fi
 
   # Check for kernel backtrace error. This is a random error so it must not
   # stop the CI but just display a warning
   # See https://github.com/seapath/ansible/issues/164
-  if grep '<failure' $CUKINIA_TEST_DIR/* | grep -q '00080'; then
+  if grep '<failure' $INCLUDE_DIR/*.xml | grep -q '00080'; then
      echo -e "\033[0;33mWarning :\033[0m kernel back trace detected, see \
          https://github.com/seapath/ansible/issues/164"
   fi
 
   # Display test results
-  if grep '<failure' $CUKINIA_TEST_DIR/* | grep -q -v '00080'; then
+  if grep '<failure' $INCLUDE_DIR/*.xml | grep -q -v '00080'; then
     echo "Test fails, See test report in the section 'Upload test report'"
     exit 1
   else
