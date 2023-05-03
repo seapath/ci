@@ -200,7 +200,7 @@ generate_report() {
   git clone -q --depth 1 -b reports "${SEAPATH_SSH_BASE_REPO}/ci.git" \
   --config core.sshCommand="ssh -i ~/.ssh/ci_rsa" "$WORK_DIR/reports"
   mkdir -p "$REPORT_DIR"
-  mv "${WORK_DIR}"/ci/report-generator/main.pdf "$REPORT_DIR/$REPORT_NAME"
+  mv "${WORK_DIR}"/ci/report-generator/test-report.pdf "$REPORT_DIR/$REPORT_NAME"
   cd "$REPORT_DIR"
   git config --local user.email "ci.seapath@gmail.com"
   git config --local user.name "Seapath CI"
