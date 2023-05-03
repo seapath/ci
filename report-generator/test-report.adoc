@@ -12,7 +12,7 @@ Test report
 :sectnumlevels: 1
 
 include::include/test-reports.adoc[]
-include::include/latency-test-reports.adoc[]
+include::include/latency-test-reports.adoc[opts=optional]
 
 == About this documentation
 
