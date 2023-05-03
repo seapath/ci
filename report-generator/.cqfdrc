@@ -3,7 +3,7 @@ org='sfl'
 name='asciidoc-report'
 
 [build]
-command='asciidoctor-pdf main.adoc'
+command='asciidoctor-pdf test-report.adoc'
 flavors='generate_latency_part generate_test_part'
 
 [generate_latency_part]
