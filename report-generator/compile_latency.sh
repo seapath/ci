@@ -2,8 +2,8 @@
 
 
 
-LATENCY_ADOC_FILE=$(readlink -f "include/latency-test-reports.adoc")
-STATS_FILE="include/stats_results"
+LATENCY_ADOC_FILE=$(readlink -f "latency-test-reports.adoc")
+STATS_FILE="stats_results"
 
 
 if [ -f $LATENCY_ADOC_FILE ] ; then

@@ -11,8 +11,8 @@ Test report
 :iconsdir: ./doc/icons/
 :sectnumlevels: 1
 
-include::include/test-reports.adoc[]
-include::include/latency-test-reports.adoc[opts=optional]
+include::test-reports-content.adoc[]
+include::latency-test-reports.adoc[opts=optional]
 
 == About this documentation
 
