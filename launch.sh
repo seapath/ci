@@ -125,6 +125,7 @@ launch_system_tests() {
 
   # Generate test report part
   INCLUDE_DIR=${WORK_DIR}/ci/report-generator/include
+  mkdir "$INCLUDE_DIR"
   mv ${WORK_DIR}/ansible/*.xml $INCLUDE_DIR # Test files
   cp ${WORK_DIR}/ansible/src/cukinia-tests/*.csv $INCLUDE_DIR # Compliance matrix
   cd ${WORK_DIR}/ci/report-generator
