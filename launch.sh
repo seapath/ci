@@ -172,7 +172,7 @@ launch_latency_tests() {
 
   echo "See latency report in the section 'Upload test report'"
 
-  # TODO : Add return value : false if we exceed may latency
+  # TODO : Add return value : false if we exceed max latency
 }
 
 # Generate the test report and upload it
@@ -180,16 +180,9 @@ generate_report() {
 
   # Generate pdf
   cd "${WORK_DIR}/ci/report-generator"
-  touch include/latency-test-reports.adoc
   if ! CQFD_EXTRA_RUN_ARGS="" cqfd -q run; then
     die "cqfd error"
   fi
-  # If the cukinia tests fail, the CI will not launch the latency tests.
-  # In that case, the pdf generation will fail cause the file
-  # include/latency-test-reports.adoc doesn't exist.
-  # To avoid that problem, the file is touch before launching cqfd.
-  # If the latency tests are launched, this file already exists and the touch
-  # do nothing
   echo "Test report generated successfully"
 
   # Upload report
