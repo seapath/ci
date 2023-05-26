@@ -141,23 +141,33 @@ generate_report() {
   TIME=`date +%F_%Hh%Mm%S`
   REPORT_NAME="test-report_${GITHUB_RUN_ID}_${GITHUB_RUN_ATTEMPT}_${TIME}.pdf"
   REPORT_DIR="${WORK_DIR}/reports/docs/reports/PR-${PR_N}"
+  REPORT_BRANCH=reports-PR${PR_N}
 
-  git clone -q --depth 1 -b reports "${SEAPATH_SSH_BASE_REPO}/ci.git" \
+  # The CI repo have one branche per pull request.
+  # If the report is the first of the PR, the branch need to be created.
+  # Otherwise, it just have to be switched on.
+  git clone -q --depth 1 "${SEAPATH_SSH_BASE_REPO}/ci.git" \
   --config core.sshCommand="ssh -i ~/.ssh/ci_rsa" "$WORK_DIR/reports"
+  cd "$WORK_DIR/reports"
+  if ! git ls-remote origin $REPORT_BRANCH | grep -q $REPORT_BRANCH; then
+    git branch $REPORT_BRANCH
+  else
+    git fetch -q origin $REPORT_BRANCH:$REPORT_BRANCH
+  fi
+  git switch -q $REPORT_BRANCH
+
   mkdir -p "$REPORT_DIR"
   mv "${WORK_DIR}"/ci/report-generator/test-report.pdf "$REPORT_DIR/$REPORT_NAME"
-  cd "$REPORT_DIR"
   git config --local user.email "ci.seapath@gmail.com"
   git config --local user.name "Seapath CI"
   git config --local core.sshCommand "ssh -i ~/.ssh/ci_rsa"
-  # TODO : setup key and put it in seapath ci github user
-  git add "$REPORT_NAME"
+  git add "$REPORT_DIR/$REPORT_NAME"
   git commit -q -m "upload report $REPORT_NAME"
-  git push -q origin reports
+  git push -q origin $REPORT_BRANCH
   echo "Test report uploaded successfully"
 
   echo See test Report at \
-  "https://${SEAPATH_BASE_REPO}/ci/blob/reports/docs/reports/PR-${PR_N}/${REPORT_NAME}"
+  "https://${SEAPATH_BASE_REPO}/ci/blob/${REPORT_BRANCH}/docs/reports/PR-${PR_N}/${REPORT_NAME}"
 }
 
 case "$1" in
