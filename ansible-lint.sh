@@ -38,7 +38,7 @@ initialization() {
   echo "Pull request sources downloaded succesfully"
 
   # Prepare ansible repository
-  echo "ansible-lint == 5.4" >> .cqfd/docker/requirements.txt
+  echo "RUN apt-get install -y ansible-lint" >> .cqfd/docker/Dockerfile
   cqfd init
   cqfd -b prepare
   echo "Sources prepared succesfully"
