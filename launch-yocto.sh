@@ -133,7 +133,8 @@ generate_report() {
   # The CI repo have one branche per pull request.
   # If the report is the first of the PR, the branch need to be created.
   # Otherwise, it just have to be switched on.
-  git clone -q --depth 1 "${SEAPATH_SSH_BASE_REPO}/ci.git" "$WORK_DIR/reports"
+  git clone -q --depth 1 -b reports-base-commit \
+    "${SEAPATH_SSH_BASE_REPO}/ci.git" "$WORK_DIR/reports"
   cd "$WORK_DIR/reports"
   if ! git ls-remote origin $REPORT_BRANCH | grep -q $REPORT_BRANCH; then
     git branch $REPORT_BRANCH
