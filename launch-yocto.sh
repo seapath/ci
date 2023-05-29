@@ -13,7 +13,7 @@ fi
 set -e
 
 die() {
-	echo "CI internal failure : $@" 1>&2
+	echo "CI internal failure : $*" 1>&2
 	exit 1
 }
 
@@ -87,9 +87,10 @@ launch_system_tests() {
   # Generate test report part
   INCLUDE_DIR=${WORK_DIR}/ci/report-generator/include
   mkdir "$INCLUDE_DIR"
-  mv ${WORK_DIR}/ansible/playbooks/common/velotek/cukinia_common.xml $INCLUDE_DIR
-  mv ${WORK_DIR}/ansible/playbooks/hypervisor/velotek/cukinia_hypervisor.xml $INCLUDE_DIR
-  cd ${WORK_DIR}/ci/report-generator
+  mv "${WORK_DIR}"/ansible/playbooks/common/velotek/cukinia_common.xml \
+     "${WORK_DIR}"/ansible/playbooks/hypervisor/velotek/cukinia_hypervisor.xml \
+     "$INCLUDE_DIR"
+  cd "${WORK_DIR}/ci/report-generator"
   cqfd -q init
   if ! cqfd -q -b generate_test_part; then
     die "cqfd error"
@@ -98,13 +99,13 @@ launch_system_tests() {
   # Check for kernel backtrace error. This is a random error so it must not
   # stop the CI but just display a warning
   # See https://github.com/seapath/ansible/issues/164
-  if grep '<failure' $INCLUDE_DIR/*.xml | grep -q '00080'; then
+  if grep '<failure' "$INCLUDE_DIR"/*.xml | grep -q '00080'; then
      echo -e "\033[0;33mWarning :\033[0m kernel back trace detected, see \
          https://github.com/seapath/ansible/issues/164"
   fi
 
   # Display test results
-  if grep '<failure' $INCLUDE_DIR/*.xml | grep -q -v '00080'; then
+  if grep '<failure' "$INCLUDE_DIR"/*.xml | grep -q -v '00080'; then
     echo "Test fails, See test report in the section 'Upload test report'"
     exit 1
   else
@@ -124,11 +125,11 @@ generate_report() {
   echo "Test report generated successfully"
 
   # Upload report
-  PR_N=`echo $GITHUB_REF | cut -d '/' -f 3`
-  TIME=`date +%F_%Hh%Mm%S`
+  PR_N=$(echo "$GITHUB_REF" | cut -d '/' -f 3)
+  TIME=$(date +%F_%Hh%Mm%S)
   REPORT_NAME="test-report_${GITHUB_RUN_ID}_${GITHUB_RUN_ATTEMPT}_${TIME}.pdf"
   REPORT_DIR="${WORK_DIR}/reports/docs/reports/PR-${PR_N}"
-  REPORT_BRANCH=reports-PR${PR_N}
+  REPORT_BRANCH="reports-PR${PR_N}"
 
   # The CI repo have one branche per pull request.
   # If the report is the first of the PR, the branch need to be created.
@@ -136,12 +137,12 @@ generate_report() {
   git clone -q --depth 1 -b reports-base-commit \
     "${SEAPATH_SSH_BASE_REPO}/ci.git" "$WORK_DIR/reports"
   cd "$WORK_DIR/reports"
-  if ! git ls-remote origin $REPORT_BRANCH | grep -q $REPORT_BRANCH; then
-    git branch $REPORT_BRANCH
+  if ! git ls-remote origin "$REPORT_BRANCH" | grep -q "$REPORT_BRANCH"; then
+    git branch "$REPORT_BRANCH"
   else
-    git fetch -q origin $REPORT_BRANCH:$REPORT_BRANCH
+    git fetch -q origin "$REPORT_BRANCH":"$REPORT_BRANCH"
   fi
-  git switch -q $REPORT_BRANCH
+  git switch -q "$REPORT_BRANCH"
 
   mkdir -p "$REPORT_DIR"
   mv "${WORK_DIR}"/ci/report-generator/test-report.pdf "$REPORT_DIR/$REPORT_NAME"
@@ -150,7 +151,7 @@ generate_report() {
   git config --local core.sshCommand "ssh -i /home/github/ci-private-files/ci_rsa"
   git add "$REPORT_DIR/$REPORT_NAME"
   git commit -q -m "upload report $REPORT_NAME"
-  git push -q origin $REPORT_BRANCH
+  git push -q origin "$REPORT_BRANCH"
   echo "Test report uploaded successfully"
 
   echo See test Report at \
