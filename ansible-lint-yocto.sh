@@ -48,9 +48,9 @@ initialization() {
 ansible_lint() {
   cp ci/ansible-lint.conf ansible
   cd ansible
-  INVENTORY=/home/github/ci-private-files/ci_yocto_standalone.yaml
+  INVENTORY=/home/github/ci-private-files/inventory_example_ansible_lint.yaml
   CQFD_EXTRA_RUN_ARGS=" \
-    -v $INVENTORY:/etc/ansible/hosts/ci_yocto_standalone.yaml \
+    -v $INVENTORY:/etc/ansible/hosts/inventory_example_ansible_lint.yaml \
     -v $WORK_DIR/ansible/ceph-ansible/roles:/etc/ansible/roles \
     " \
   cqfd run ansible-lint -c ansible-lint.conf
