@@ -21,24 +21,9 @@ die() {
 SEAPATH_BASE_REPO="github.com/seapath"
 SEAPATH_SSH_BASE_REPO="git@github.com:seapath"
 
-# TODO : key inventory and ca
-REPO_PRIVATE_KEYFILE=inventories_private/ci_rsa # Must have 600 right
-ANSIBLE_INVENTORY=""
-CA_DIR=""
-
-CQFD_EXTRA_RUN_ARGS="-e ANSIBLE_INVENTORY=${ANSIBLE_INVENTORY}"
-
-# If REPO_PRIVATE_KEYFILE is an absolute path bind it inside cqfd
-if [[ "${REPO_PRIVATE_KEYFILE}" == /* ]] ; then
-  CQFD_EXTRA_RUN_ARGS="${CQFD_EXTRA_RUN_ARGS} -v $REPO_PRIVATE_KEYFILE:/tmp/ci_ssh_key "
-  PRIVATE_KEYFILE_PATH=/tmp/ci_ssh_key
-else
-  PRIVATE_KEYFILE_PATH="${REPO_PRIVATE_KEYFILE}"
-fi
-
-if [ -n "${CA_DIR}" ] ; then
-  CQFD_EXTRA_RUN_ARGS="${CQFD_EXTRA_RUN_ARGS} -v ${CA_DIR}:$WORK_DIR/ansible/src/ca"
-fi
+ANSIBLE_INVENTORY="/tmp/ci-private-files/ci_yocto_standalone.yaml"
+CQFD_EXTRA_RUN_ARGS="-e ANSIBLE_INVENTORY=${ANSIBLE_INVENTORY} -v /home/github/ci-private-files:/tmp/ci-private-files"
+PRIVATE_KEYFILE_PATH="/tmp/ci-private-files/ci_rsa"
 
 export CQFD_EXTRA_RUN_ARGS
 
@@ -84,7 +69,7 @@ configure_seapath() {
   cqfd run ansible-playbook \
   --key-file "${PRIVATE_KEYFILE_PATH}" \
   --skip-tags "package-install" \
-  playbooks/ # TODO : setup playbook
+  playbooks/ci_standalone_setup.yaml
   echo "SEAPATH set up succesfully"
 }
 
@@ -94,14 +79,16 @@ launch_system_tests() {
   cd ansible
   cqfd run ansible-playbook \
   --key-file "${PRIVATE_KEYFILE_PATH}" \
-  playbooks/ # TODO : setup playbook
+  -e machines_tested=hypervisors \
+  playbooks/ci_common_tests.yaml \
+  playbooks/ci_hypervisor_tests.yaml
   echo "System tests launched successfully"
 
   # Generate test report part
   INCLUDE_DIR=${WORK_DIR}/ci/report-generator/include
   mkdir "$INCLUDE_DIR"
-  mv ${WORK_DIR}/ansible/*.xml $INCLUDE_DIR # Test files
-  cp ${WORK_DIR}/ansible/src/cukinia-tests/*.csv $INCLUDE_DIR # Compliance matrix
+  mv ${WORK_DIR}/ansible/playbooks/common/velotek/cukinia_common.xml $INCLUDE_DIR
+  mv ${WORK_DIR}/ansible/playbooks/hypervisor/velotek/cukinia_hypervisor.xml $INCLUDE_DIR
   cd ${WORK_DIR}/ci/report-generator
   cqfd -q init
   if ! cqfd -q -b generate_test_part; then
@@ -146,8 +133,7 @@ generate_report() {
   # The CI repo have one branche per pull request.
   # If the report is the first of the PR, the branch need to be created.
   # Otherwise, it just have to be switched on.
-  git clone -q --depth 1 "${SEAPATH_SSH_BASE_REPO}/ci.git" \
-  --config core.sshCommand="ssh -i ~/.ssh/ci_rsa" "$WORK_DIR/reports"
+  git clone -q --depth 1 "${SEAPATH_SSH_BASE_REPO}/ci.git" "$WORK_DIR/reports"
   cd "$WORK_DIR/reports"
   if ! git ls-remote origin $REPORT_BRANCH | grep -q $REPORT_BRANCH; then
     git branch $REPORT_BRANCH
@@ -160,7 +146,7 @@ generate_report() {
   mv "${WORK_DIR}"/ci/report-generator/test-report.pdf "$REPORT_DIR/$REPORT_NAME"
   git config --local user.email "ci.seapath@gmail.com"
   git config --local user.name "Seapath CI"
-  git config --local core.sshCommand "ssh -i ~/.ssh/ci_rsa"
+  git config --local core.sshCommand "ssh -i /home/github/ci-private-files/ci_rsa"
   git add "$REPORT_DIR/$REPORT_NAME"
   git commit -q -m "upload report $REPORT_NAME"
   git push -q origin $REPORT_BRANCH
