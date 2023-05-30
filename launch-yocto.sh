@@ -23,7 +23,7 @@ SEAPATH_SSH_BASE_REPO="git@github.com:seapath"
 
 ANSIBLE_INVENTORY="/tmp/ci-private-files/ci_yocto_standalone.yaml"
 CQFD_EXTRA_RUN_ARGS="-e ANSIBLE_INVENTORY=${ANSIBLE_INVENTORY} -v /home/github/ci-private-files:/tmp/ci-private-files"
-PRIVATE_KEYFILE_PATH="/tmp/ci-private-files/ci_rsa"
+PRIVATE_KEYFILE_PATH="/tmp/ci-private-files/ssh_keys/ci_rsa"
 
 export CQFD_EXTRA_RUN_ARGS
 
@@ -135,6 +135,7 @@ generate_report() {
   # If the report is the first of the PR, the branch need to be created.
   # Otherwise, it just have to be switched on.
   git clone -q --depth 1 -b reports-base-commit \
+    --config core.sshCommand="ssh -i ~/ci-private-files/ssh_keys/ci_rsa" \
     "${SEAPATH_SSH_BASE_REPO}/ci.git" "$WORK_DIR/reports"
   cd "$WORK_DIR/reports"
   if ! git ls-remote origin "$REPORT_BRANCH" | grep -q "$REPORT_BRANCH"; then
@@ -148,7 +149,7 @@ generate_report() {
   mv "${WORK_DIR}"/ci/report-generator/test-report.pdf "$REPORT_DIR/$REPORT_NAME"
   git config --local user.email "ci.seapath@gmail.com"
   git config --local user.name "Seapath CI"
-  git config --local core.sshCommand "ssh -i /home/github/ci-private-files/ci_rsa"
+  git config --local core.sshCommand "ssh -i ~/ci-private-files/ssh_keys/ci_rsa"
   git add "$REPORT_DIR/$REPORT_NAME"
   git commit -q -m "upload report $REPORT_NAME"
   git push -q origin "$REPORT_BRANCH"
