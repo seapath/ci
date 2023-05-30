@@ -53,11 +53,6 @@ ansible_lint() {
       echo "No ansible-lint available. Skipping linting."
       exit 0
   fi
-  INVENTORIES_DIR=/home/virtu/ansible/seapath_inventories
-  CQFD_EXTRA_RUN_ARGS=" \
-    -v $INVENTORIES_DIR:/etc/ansible/hosts \
-    -v $WORK_DIR/ansible/ceph-ansible/roles:/etc/ansible/roles \
-    " \
   cqfd -b ansible-lint
 }
 
