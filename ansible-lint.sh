@@ -36,9 +36,11 @@ initialization() {
   git fetch -q origin ${GITHUB_REF}
   git checkout -q FETCH_HEAD
   echo "Pull request sources downloaded succesfully"
-
+  if [ ! -f ansible-lint.conf ] ; then
+      echo "No ansible-lint available. Skipping linting."
+      exit 0
+  fi
   # Prepare ansible repository
-  echo "RUN apt-get install -y ansible-lint" >> .cqfd/docker/Dockerfile
   cqfd init
   cqfd -b prepare
   echo "Sources prepared succesfully"
@@ -46,14 +48,17 @@ initialization() {
 
 # Launch ansible-lint
 ansible_lint() {
-  cp ci/ansible-lint.conf ansible
   cd ansible
+  if [ ! -f ansible-lint.conf ] ; then
+      echo "No ansible-lint available. Skipping linting."
+      exit 0
+  fi
   INVENTORIES_DIR=/home/virtu/ansible/seapath_inventories
   CQFD_EXTRA_RUN_ARGS=" \
     -v $INVENTORIES_DIR:/etc/ansible/hosts \
     -v $WORK_DIR/ansible/ceph-ansible/roles:/etc/ansible/roles \
     " \
-  cqfd run ansible-lint -c ansible-lint.conf
+  cqfd -b ansible-lint
 }
 
 case "$1" in
