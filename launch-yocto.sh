@@ -87,8 +87,8 @@ launch_system_tests() {
   # Generate test report part
   INCLUDE_DIR=${WORK_DIR}/ci/report-generator/include
   mkdir "$INCLUDE_DIR"
-  mv "${WORK_DIR}"/ansible/playbooks/common/velotek/cukinia_common.xml \
-     "${WORK_DIR}"/ansible/playbooks/hypervisor/velotek/cukinia_hypervisor.xml \
+  mv "${WORK_DIR}"/ansible/playbooks/common/yoctoCI/cukinia_common.xml \
+     "${WORK_DIR}"/ansible/playbooks/hypervisor/yoctoCI/cukinia_hypervisor.xml \
      "$INCLUDE_DIR"
   cd "${WORK_DIR}/ci/report-generator"
   cqfd -q init
