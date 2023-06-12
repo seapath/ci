@@ -61,17 +61,19 @@ def main(argv):
         prev = hw_ts
 
     lat_pub_sub = []
-    index = 0
+    missed_rid_list = []
     if not pub_only:
         for fields in results_reader(input_file_sub):
             rid = fields[0]
             sub_ts = fields[1]
-            if rid not in key_doublon and rid in pub_data:
-                lat_pub_sub.append(sub_ts-pub_data[rid])
-                sv_data[rid].sub_ts = sub_ts
-            index+=1
+            if rid not in key_doublon:
+                if rid in pub_data:
+                    lat_pub_sub.append(sub_ts-pub_data[rid])
+                    sv_data[rid].sub_ts = sub_ts
+                else:
+                    missed_rid_list.append(rid)
 
-
+    
     interval_between_pub_us = interval_between_pub_us[skip_first_n:]
     interval_hw2aclock = interval_hw2aclock[skip_first_n:]
     interval_bclock2hw = interval_bclock2hw[skip_first_n:]
@@ -79,16 +81,18 @@ def main(argv):
 
 
 
-    x, y = hist([round(v/100) for v in lat_pub_sub])
+    x, y = hist([round(v/1000) for v in lat_pub_sub])
     plt.bar(x, y)
-    plt.xlabel('delay (x100 ns)')
+    plt.xlabel('delay (µs)')
     plt.ylabel('occurences')
     plt.title('pub(hw ts) -> sub (REALTIME) (1 stream)')
     plt.yscale("log")
 
     sub_name_parts = input_file_sub.split("_") # Spliting parts of subscriber data file name
     sub_machine_name = sub_name_parts[-1].split(".")[0] # And getting subscriber machine name field
-
+    
+    if not os.path.isdir('include'):
+        os.mkdir('include')
 
     plt.savefig('include/sub_' + sub_machine_name + '_delay.png')
     plt.close()
@@ -106,17 +110,18 @@ def main(argv):
 
     plt.savefig('include/pub_' + pub_machine_name + '_interval_between.png')
     plt.close()
-    print(f'Data: {len(lat_pub_sub)} frames\n'
-        f'    std dev pub-sub time: {statistics.pstdev(lat_pub_sub)} ns\n'
+    print(f'Latency publication-reception ({len(lat_pub_sub)} frames)\n'
+        f'    missed sv: {len(missed_rid_list)}\n'
+        f'    std dev pub-sub time: {round(statistics.pstdev(lat_pub_sub))} ns\n'
         f'    median: {statistics.median(lat_pub_sub)} ns\n'
-        f'    mean: {statistics.mean(lat_pub_sub)} ns\n'
+        f'    mean: {round(statistics.mean(lat_pub_sub))} ns\n'
         f'    min: {min(lat_pub_sub)} ns\n'
         f'    max: {max(lat_pub_sub)} ns\n')
 
-    print(f'Data: {len(interval_between_pub_us)} frame pairs\n'
-        f'    std dev of frame-to-frame time: {statistics.pstdev(interval_between_pub_us)} µs\n'
+    print(f'Interval between published frames ({len(interval_between_pub_us)} frame pairs)\n'
+        f'    std dev of frame-to-frame time: {round(statistics.pstdev(interval_between_pub_us))} µs\n'
         f'    median: {statistics.median(interval_between_pub_us)} µs\n'
-        f'    mean: {statistics.mean(interval_between_pub_us)} µs\n'
+        f'    mean: {round(statistics.mean(interval_between_pub_us))} µs\n'
         f'    min: {min(interval_between_pub_us)} µs\n'
         f'    max: {max(interval_between_pub_us)} µs\n')
 
