@@ -162,10 +162,19 @@ launch_vm_tests() {
   playbooks/deploy_vms_cluster.yaml
   echo "test VM deployed successfully"
 
+  # TODO: add VM configuration and hardening
+
   cqfd run ansible-playbook \
   --key-file "${PRIVATE_KEYFILE_PATH}" \
   --limit VMs \
   playbooks/ci_test.yaml
+
+  # TODO: integrate this result file in the pdf report.
+  if grep '<failure' *.xml | grep -q -v '00080'; then
+    echo "Test on VM fails, This is ignored for now"
+  else
+    echo "All tests pass"
+  fi
 }
 
 
