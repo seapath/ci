@@ -156,6 +156,13 @@ launch_system_tests() {
 # Deploy a Virtual machine on the cluster and launch cukinia tests in it.
 # Fetch results
 launch_vm_tests() {
+  # Recover vm qcow2 file.
+  if [ -z "${VM_QCOW2_FILE}" ] ; then
+    echo "Can't launch vm tests. Please define VM_QCOW2_FILE in /etc/seapath-ci.conf"
+    exit 1
+  fi
+  cp ${VM_QCOW2_FILE} ansible/vm_images/guest.qcow2
+
   cd ansible
   cqfd run ansible-playbook \
   --key-file "${PRIVATE_KEYFILE_PATH}" \
