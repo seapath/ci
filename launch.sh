@@ -37,7 +37,7 @@ if [ -z "${REPO_PRIVATE_KEYFILE}" ] ; then
 fi
 
 if [ -z "${ANSIBLE_INVENTORY}" ] ; then
-  ANSIBLE_INVENTORY="inventories_private/seapath_cluster_ci.yml,inventories_private/seapath_standalone_rt.yml"
+  ANSIBLE_INVENTORY="inventories_private/seapath_cluster_ci.yml,inventories_private/seapath_standalone_rt.yml,inventories_private/vm.yml"
 fi
 if [ -z "${SVTOOLS_TARBALL}" ] ; then
   SVTOOLS_TARBALL="/home/virtu/ci-latency-tools/IEC61850_svtools/"
@@ -70,13 +70,14 @@ usage()
     It is separated in many functions in order to display logs properly.
     They should be called one after another.
 USAGE:
-    ./launch.sh <init|conf|system|latency|report>
+    ./launch.sh <init|conf|system|vm|latency|report>
 DESCRIPTION:
     - init : download and prepare the sources.
     - conf : configure the debian OS to build SEAPATH.
     - system : launch system tests and gather results.
-    - latency: launch latency tests and gather results.
-    - report: build and upload the test report.
+    - vm : launch tests inside a virtual machine in the cluster.
+    - latency : launch latency tests and gather results.
+    - report : build and upload the test report.
 EOF
 }
 
@@ -152,6 +153,22 @@ launch_system_tests() {
   fi
 }
 
+# Deploy a Virtual machine on the cluster and launch cukinia tests in it.
+# Fetch results
+launch_vm_tests() {
+  cd ansible
+  cqfd run ansible-playbook \
+  --key-file "${PRIVATE_KEYFILE_PATH}" \
+  playbooks/deploy_vms_cluster.yaml
+  echo "test VM deployed successfully"
+
+  cqfd run ansible-playbook \
+  --key-file "${PRIVATE_KEYFILE_PATH}" \
+  --limit VMs \
+  playbooks/ci_test.yaml
+}
+
+
 # Deploy subscriber and publisher, generate SV and measure latency time
 launch_latency_tests() {
   cd ansible
@@ -219,6 +236,10 @@ case "$1" in
     ;;
   system)
     launch_system_tests
+    exit 0
+    ;;
+  vm)
+    launch_vm_tests
     exit 0
     ;;
   latency)
