@@ -37,7 +37,7 @@ if [ -z "${REPO_PRIVATE_KEYFILE}" ] ; then
 fi
 
 if [ -z "${ANSIBLE_INVENTORY}" ] ; then
-  ANSIBLE_INVENTORY="inventories_private/seapath_cluster_ci.yml,inventories_private/seapath_standalone_rt.yml,inventories_private/vm.yml"
+  ANSIBLE_INVENTORY="inventories_private/seapath_cluster_ci.yml,inventories_private/seapath_standalone_rt.yml"
 fi
 if [ -z "${SVTOOLS_TARBALL}" ] ; then
   SVTOOLS_TARBALL="/home/virtu/ci-latency-tools/IEC61850_svtools/"
@@ -162,6 +162,12 @@ launch_vm_tests() {
     exit 1
   fi
   cp ${VM_QCOW2_FILE} ansible/vm_images/guest.qcow2
+
+  # Add VM inventory file
+  # This file cannot be added at the beginnig of launch.sh cause it is used
+  # only during thes step
+  ANSIBLE_INVENTORY="${ANSIBLE_INVENTORY},inventories_private/vm.yml"
+  CQFD_EXTRA_RUN_ARGS="${CQFD_EXTRA_RUN_ARGS} -e ANSIBLE_INVENTORY=${ANSIBLE_INVENTORY}"
 
   cd ansible
   cqfd run ansible-playbook \
