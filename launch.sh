@@ -177,7 +177,11 @@ launch_vm_tests() {
   playbooks/deploy_vms_cluster.yaml
   echo "test VM deployed successfully"
 
-  # TODO: add VM configuration and hardening
+  cqfd run ansible-playbook \
+  --key-file "${PRIVATE_KEYFILE_PATH}" \
+  --limit VMs \
+  playbooks/cluster_setup_debian.yaml \
+  playbooks/cluster_setup_hardened_debian.yaml
 
   cqfd run ansible-playbook \
   --key-file "${PRIVATE_KEYFILE_PATH}" \
