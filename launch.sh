@@ -110,6 +110,7 @@ configure_debian() {
   cqfd run ansible-playbook \
   --key-file "${PRIVATE_KEYFILE_PATH}" \
   --skip-tags "package-install" \
+  --limit 'all:!ci-tool' \
   playbooks/ci_configure.yaml
   echo "Debian set up succesfully"
 }
@@ -121,6 +122,7 @@ launch_system_tests() {
   cqfd run ansible-playbook \
   --key-file "${PRIVATE_KEYFILE_PATH}" \
   --skip-tags "package-install" \
+  --limit 'all:!ci-tool' \
   playbooks/ci_test.yaml
   echo "System tests launched successfully"
 
