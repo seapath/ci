@@ -188,11 +188,26 @@ launch_vm_tests() {
   --limit VMs \
   playbooks/ci_test.yaml
 
-  # TODO: integrate this result file in the pdf report.
-  if grep '<failure' *.xml | grep -q -v '00080'; then
-    echo "Test on VM fails, This is ignored for now"
+  # Generate test report part
+  # This part relaunch the test report generator with all cukinia test file
+  # including the physical machine and the VM.
+  # This actually redo what was done in the launch_system_tests but with the VM file
+  # That's the best way I found to integrate this properly
+  INCLUDE_DIR=${WORK_DIR}/ci/report-generator/include
+  mv ${WORK_DIR}/ansible/*.xml $INCLUDE_DIR # Test files
+  cd ${WORK_DIR}/ci/report-generator
+  cqfd -q init
+  if ! cqfd -q -b generate_test_part; then
+    die "cqfd error"
+  fi
+
+  # Display test results
+  if grep -q '<failure' $INCLUDE_DIR/*.xml; then
+    echo "Test fails, See test report in the section 'Upload test report'"
+    exit 1
   else
     echo "All tests pass"
+    exit 0
   fi
 }
 
