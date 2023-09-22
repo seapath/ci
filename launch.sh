@@ -35,6 +35,9 @@ fi
 if [ -z "${REPO_PRIVATE_KEYFILE}" ] ; then
   REPO_PRIVATE_KEYFILE=inventories_private/ci_rsa
 fi
+if [ -z "${INVENTORY_VM}" ] ; then
+  INVENTORY_VM=inventories_private/vm.yml
+fi
 
 if [ -z "${ANSIBLE_INVENTORY}" ] ; then
   ANSIBLE_INVENTORY="inventories_private/seapath_cluster_ci.yml,inventories_private/seapath_standalone_rt.yml"
@@ -161,7 +164,7 @@ launch_vm_tests() {
   # Add VM inventory file
   # This file cannot be added at the beginnig of launch.sh cause it is used
   # only during thes step
-  ANSIBLE_INVENTORY="${ANSIBLE_INVENTORY},inventories_private/vm.yml"
+  ANSIBLE_INVENTORY="${ANSIBLE_INVENTORY},${INVENTORY_VM}"
   CQFD_EXTRA_RUN_ARGS="${CQFD_EXTRA_RUN_ARGS} -e ANSIBLE_INVENTORY=${ANSIBLE_INVENTORY} -v /etc/seapath-ci/vm_file:${WORK_DIR}/ansible/vm_images"
 
   cd ansible
