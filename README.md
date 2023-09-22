@@ -14,6 +14,7 @@ Only `PRIVATE_INVENTORIES_REPO_URL` is mandatory.
 - `SEAPATH_SSH_BASE_REPO`: git main ssh URL part. eg: git@github.com:seapath
 - `REPO_PRIVATE_KEYFILE`: path of the SSH git private key used for pushing the report.
 - `ANSIBLE_INVENTORY`: Ansible inventory environment variable as described here: https://docs.ansible.com/ansible/latest/reference_appendices/config.html#envvar-ANSIBLE_INVENTORY
+- `INVENTORY_VM`: path to the guest (vm.yml) inventory
 - `SVTOOLS_TARBALL`: path to the svtools binary tarball
 - `TRAFGEN_TARBALL`: path to the tafgen binary tarball
 - `CA_DIR`: path to the directory containing syslog certificate
