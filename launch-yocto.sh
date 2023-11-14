@@ -80,15 +80,13 @@ launch_system_tests() {
   cqfd run ansible-playbook \
   --key-file "${PRIVATE_KEYFILE_PATH}" \
   -e machines_tested=hypervisors \
-  playbooks/ci_common_tests.yaml \
-  playbooks/ci_hypervisor_tests.yaml
+  playbooks/ci_all_machines_tests.yaml
   echo "System tests launched successfully"
 
   # Generate test report part
   INCLUDE_DIR=${WORK_DIR}/ci/report-generator/include
   mkdir "$INCLUDE_DIR"
-  mv "${WORK_DIR}"/ansible/playbooks/common/yoctoCI/cukinia_common.xml \
-     "${WORK_DIR}"/ansible/playbooks/hypervisor/yoctoCI/cukinia_hypervisor.xml \
+  mv "${WORK_DIR}"/ansible/playbooks/all/yoctoCI/cukinia.xml \
      "$INCLUDE_DIR"
   cd "${WORK_DIR}/ci/report-generator"
   cqfd -q init
