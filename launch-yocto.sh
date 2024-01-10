@@ -84,15 +84,9 @@ launch_system_tests() {
   echo "System tests launched successfully"
 
   # Generate test report part
-  INCLUDE_DIR=${WORK_DIR}/ci/report-generator/include
+  INCLUDE_DIR=${WORK_DIR}/ci/test-report-pdf/include
   mkdir "$INCLUDE_DIR"
-  mv "${WORK_DIR}"/ansible/playbooks/all/yoctoCI/cukinia.xml \
-     "$INCLUDE_DIR"
-  cd "${WORK_DIR}/ci/report-generator"
-  cqfd -q init
-  if ! cqfd -q -b generate_test_part; then
-    die "cqfd error"
-  fi
+  mv "${WORK_DIR}"/ansible/cukinia_*.xml "$INCLUDE_DIR"
 
   # Check for kernel backtrace error. This is a random error so it must not
   # stop the CI but just display a warning
@@ -115,9 +109,10 @@ launch_system_tests() {
 # Generate the test report and upload it
 generate_report() {
 
-  # Generate pdf
-  cd "${WORK_DIR}/ci/report-generator"
-  if ! CQFD_EXTRA_RUN_ARGS="" cqfd -q run; then
+  # Generate test report
+  cd "${WORK_DIR}/ci/test-report-pdf"
+  cqfd -q init
+  if ! CQFD_EXTRA_RUN_ARGS="" cqfd -q run ./compile.py -s -m -i include ; then
     die "cqfd error"
   fi
   echo "Test report generated successfully"
@@ -129,7 +124,7 @@ generate_report() {
   REPORT_DIR="${WORK_DIR}/reports/docs/reports/PR-${PR_N}"
   REPORT_BRANCH="reports-PR${PR_N}"
 
-  # The CI repo have one branche per pull request.
+  # The CI repo have one branch per pull request.
   # If the report is the first of the PR, the branch need to be created.
   # Otherwise, it just have to be switched on.
   git clone -q --depth 1 -b reports-base-commit \
@@ -144,7 +139,7 @@ generate_report() {
   git switch -q "$REPORT_BRANCH"
 
   mkdir -p "$REPORT_DIR"
-  mv "${WORK_DIR}"/ci/report-generator/test-report.pdf "$REPORT_DIR/$REPORT_NAME"
+  mv "${WORK_DIR}"/ci/test-report-pdf/test-report.pdf "$REPORT_DIR/$REPORT_NAME"
   git config --local user.email "ci.seapath@gmail.com"
   git config --local user.name "Seapath CI"
   git config --local core.sshCommand "ssh -i ~/ci-private-files/ssh_keys/ci_rsa"
