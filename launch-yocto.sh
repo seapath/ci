@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright (C) 2023 Savoir-faire Linux, Inc.
+# Copyright (C) 2023-2024 Savoir-faire Linux, Inc.
 # SPDX-License-Identifier: Apache-2.0
 #
 # This script download the sources of a specific pull request,
