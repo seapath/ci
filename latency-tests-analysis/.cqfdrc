@@ -1,0 +1,6 @@
+[project]
+org='sfl'
+name='latency-results-analysis'
+
+[build]
+command='./compile_latency.sh'
