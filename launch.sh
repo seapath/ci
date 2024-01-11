@@ -228,8 +228,13 @@ launch_latency_tests() {
 # Generate the test report and upload it
 generate_report() {
 
-  # Generate pdf
+  # Replace test-report-pdf themes with SEAPATH one
   cd "${WORK_DIR}/ci/test-report-pdf"
+  rm themes/sfl.png
+  mv ../seapath-themes/logo.png themes
+  mv ../seapath-themes/theme.yml themes/sfl-theme.yml
+
+  # Generate test report
   cqfd -q init
   if ! CQFD_EXTRA_RUN_ARGS="" cqfd -q run ./compile.py -s -m -i include \
       -c include/ANSSI-BP28-Recommandations-M.csv \
