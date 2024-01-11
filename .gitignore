@@ -1,4 +1,5 @@
 __pycache__
 *.png
+!seapath-themes/logo.png
 .vscode/*
 *.pdf

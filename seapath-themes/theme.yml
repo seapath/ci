@@ -3,7 +3,7 @@ title_page:
   background_color: #56b0c9
   align: center
   logo:
-    image: image:logo_seapath.png[width=50%, align=center]
+    image: image:logo.png[width=50%, align=center]
   title:
     top: 30%
     font_style: bold
