@@ -54,8 +54,8 @@ add_latency_results()
         # Output example: $SUB_RESULT_FILE = /tmp/tests_results/sub_results_hypervisor_virtu-ci1 --> $SUB_MACHINE_NAME = virtu-ci1
 
         echo "=== $SUB_MACHINE_NAME" >> "$LATENCY_ADOC_FILE" # Subtitle for each subscriber
-        echo "image::./include/sub_"$SUB_MACHINE_NAME"_delay.png[]" >> "$LATENCY_ADOC_FILE" # Include delay graph
-        echo "image::./include/pub_standalone_interval_between.png[]" >> "$LATENCY_ADOC_FILE" # Include time between packets graph
+        echo "image::../../include/sub_"$SUB_MACHINE_NAME"_delay.png[]" >> "$LATENCY_ADOC_FILE" # Include delay graph
+        echo "image::../../include/pub_ci-tool_interval_between.png[]" >> "$LATENCY_ADOC_FILE" # Include time between packets graph
         echo " " >> "$LATENCY_ADOC_FILE"
 
         sed -i 's/$/ +/' $STATS_FILE # Add '+' character at the end of each file sub stat line for making carriage return
