@@ -20,7 +20,7 @@ die() {
 # default variables
 SEAPATH_BASE_REPO="github.com/seapath"
 SEAPATH_SSH_BASE_REPO="git@github.com:seapath"
-
+INVENTORY_VM="/tmp/ci-private-files/ci_yocto_vm_inventory.yaml"
 ANSIBLE_INVENTORY="/tmp/ci-private-files/ci_yocto_standalone.yaml"
 CQFD_EXTRA_RUN_ARGS="-e ANSIBLE_INVENTORY=${ANSIBLE_INVENTORY} -v /home/github/ci-private-files:/tmp/ci-private-files"
 
@@ -103,6 +103,20 @@ launch_system_tests() {
   fi
 }
 
+# Deploy a virtual machines on the standalone machine.
+deploy_vms() {
+  # Add VM inventory file
+  # This file cannot be added at the beginning of launch-yocto.sh because it is
+  # used only during these steps
+  ANSIBLE_INVENTORY="${ANSIBLE_INVENTORY},${INVENTORY_VM}"
+  CQFD_EXTRA_RUN_ARGS="${CQFD_EXTRA_RUN_ARGS} -e ANSIBLE_INVENTORY=${ANSIBLE_INVENTORY}"
+
+  cd ansible
+  cqfd run ansible-playbook \
+  playbooks/deploy_vms_standalone.yaml
+  echo "test VMs deployed successfully"
+}
+
 # Generate the test report and upload it
 generate_report() {
 
@@ -163,6 +177,10 @@ case "$1" in
     ;;
   system)
     launch_system_tests
+    exit 0
+    ;;
+  deploy_vms)
+    deploy_vms
     exit 0
     ;;
   report)
