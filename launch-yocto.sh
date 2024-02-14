@@ -109,7 +109,7 @@ deploy_vms() {
   # This file cannot be added at the beginning of launch-yocto.sh because it is
   # used only during these steps
   ANSIBLE_INVENTORY="${ANSIBLE_INVENTORY},${INVENTORY_VM}"
-  CQFD_EXTRA_RUN_ARGS="${CQFD_EXTRA_RUN_ARGS} -e ANSIBLE_INVENTORY=${ANSIBLE_INVENTORY}
+  CQFD_EXTRA_RUN_ARGS="${CQFD_EXTRA_RUN_ARGS} -e ANSIBLE_INVENTORY=${ANSIBLE_INVENTORY}"
 
   cd ansible
   cqfd run ansible-playbook \
