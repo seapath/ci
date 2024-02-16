@@ -103,7 +103,7 @@ launch_system_tests() {
   fi
 }
 
-# Deploy a virtual machines on the standalone machine.
+# Deploy a virtual machines on the standalone machine
 deploy_vms() {
   # Add VM inventory file
   # This file cannot be added at the beginning of launch-yocto.sh because it is
@@ -117,6 +117,34 @@ deploy_vms() {
   echo "test VMs deployed successfully"
 }
 
+# Prepare and launch cukinia tests for VMs
+# Send the result of the tests as return code
+tests_vm() {
+  # Add VM inventory file
+  # This file cannot be added at the beginning of launch-yocto.sh because it is
+  # used only during these steps
+  ANSIBLE_INVENTORY="${ANSIBLE_INVENTORY},${INVENTORY_VM}"
+  CQFD_EXTRA_RUN_ARGS="${CQFD_EXTRA_RUN_ARGS} -e ANSIBLE_INVENTORY=${ANSIBLE_INVENTORY}"
+
+  cd ansible
+  cqfd run ansible-playbook \
+  -e machines_tested=VMs \
+  playbooks/ci_all_machines_tests.yaml
+  echo "System tests launched successfully"
+
+  # Generate test report part
+  INCLUDE_DIR=${WORK_DIR}/ci/test-report-pdf/include
+  mv "${WORK_DIR}"/ansible/cukinia_*.xml "$INCLUDE_DIR"
+
+  # Display test results
+  if grep '<failure' "$INCLUDE_DIR"/*.xml | grep -q -v '00080'; then
+    echo "Test fails, See test report in the section 'Upload test report'"
+    exit 1
+  else
+    echo "All tests pass"
+    exit 0
+  fi
+}
 # Generate the test report and upload it
 generate_report() {
 
@@ -181,6 +209,10 @@ case "$1" in
     ;;
   deploy_vms)
     deploy_vms
+    exit 0
+    ;;
+  tests_vm)
+    tests_vm
     exit 0
     ;;
   report)
