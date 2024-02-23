@@ -34,11 +34,13 @@ usage()
     It is separated in many functions in order to display logs properly.
     They should be called one after another.
 USAGE:
-    ./launch.sh <init|conf|system|report>
+    ./launch.sh <init|conf|system|deploy_vms|tests_vm|report>
 DESCRIPTION:
-    - init : download and prepare the sources.
-    - conf : configure SEAPATH.
-    - system : launch system tests and gather results.
+    - init: download and prepare the sources.
+    - conf: configure SEAPATH.
+    - system: launch system tests and gather results.
+    - deploy_vms: deploy virtual machines on the standalone machine.
+    - tests_vm: prepare and launch cukinia tests for VMs.
     - report: build and upload the test report.
 EOF
 }
@@ -103,7 +105,7 @@ launch_system_tests() {
   fi
 }
 
-# Deploy a virtual machines on the standalone machine
+# Deploy virtual machines on the standalone machine
 deploy_vms() {
   # Add VM inventory file
   # This file cannot be added at the beginning of launch-yocto.sh because it is
