@@ -17,13 +17,29 @@ die() {
 	exit 1
 }
 
-# default variables
-SEAPATH_BASE_REPO="github.com/seapath"
-SEAPATH_SSH_BASE_REPO="git@github.com:seapath"
-INVENTORY_VM="/tmp/ci-private-files/ci_yocto_vm_inventory.yaml"
-ANSIBLE_INVENTORY="/tmp/ci-private-files/ci_yocto_standalone.yaml"
-CQFD_EXTRA_RUN_ARGS="-e ANSIBLE_INVENTORY=${ANSIBLE_INVENTORY} -v /home/github/ci-private-files:/tmp/ci-private-files"
+# Source CI configuration file
+# This file must at least define the PRIVATE_INVENTORIES_REPO_URL variable
+source /etc/seapath-ci.conf
 
+if [ -z "${PRIVATE_INVENTORIES_REPO_URL}" ] ; then
+  die "PRIVATE_INVENTORIES_REPO_URL not defined!"
+fi
+
+# default variables
+if [ -z "${SEAPATH_BASE_REPO}" ] ; then
+    SEAPATH_BASE_REPO="github.com/seapath"
+fi
+if [ -z "${SEAPATH_SSH_BASE_REPO}" ] ; then
+    SEAPATH_SSH_BASE_REPO="git@github.com:seapath"
+fi
+if [ -z "${INVENTORY_VM}" ] ; then
+  INVENTORY_VM=inventories_private/ci_vms.yml
+fi
+
+if [ -z "${ANSIBLE_INVENTORY}" ] ; then
+  ANSIBLE_INVENTORY="inventories_private/ci_yocto_standalone.yaml"
+fi
+CQFD_EXTRA_RUN_ARGS="-e ANSIBLE_INVENTORY=${ANSIBLE_INVENTORY}"
 export CQFD_EXTRA_RUN_ARGS
 
 # Standard help message
@@ -57,6 +73,9 @@ initialization() {
   git fetch -q origin "${GITHUB_REF}"
   git checkout -q FETCH_HEAD
   echo "Pull request sources got succesfully"
+
+  # Get inventories
+  git clone -q "${PRIVATE_INVENTORIES_REPO_URL}" inventories_private
 
   # Prepare ansible repository
   cqfd init
