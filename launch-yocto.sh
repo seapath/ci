@@ -50,13 +50,14 @@ usage()
     It is separated in many functions in order to display logs properly.
     They should be called one after another.
 USAGE:
-    ./launch.sh <init|conf|system|deploy_vms|tests_vm|report>
+    ./launch.sh <init|conf|system|deploy_vms|test_vms|test_latency|report>
 DESCRIPTION:
     - init: download and prepare the sources.
     - conf: configure SEAPATH.
     - system: launch system tests and gather results.
     - deploy_vms: deploy virtual machines on the standalone machine.
-    - tests_vm: prepare and launch cukinia tests for VMs.
+    - test_vms: prepare and launch cukinia tests for VMs.
+    - test_latency: prepare and launch latency tests.
     - report: build and upload the test report.
 EOF
 }
@@ -140,7 +141,7 @@ deploy_vms() {
 
 # Prepare and launch cukinia tests for VMs
 # Send the result of the tests as return code
-tests_vm() {
+test_vms() {
   # Add VM inventory file
   # This file cannot be added at the beginning of launch-yocto.sh because it is
   # used only during these steps
@@ -166,6 +167,39 @@ tests_vm() {
     exit 0
   fi
 }
+
+# Prepare and launch latency tests
+test_latency() {
+  # Build sv timestamp logger
+  cd sv_timestamp_logger
+  docker build . --tag sv_timestamp_logger -f Dockerfile
+  docker image save -o sv_timestamp_logger.tar sv_timestamp_logger
+  mv sv_timestamp_logger.tar ../ansible/ci_latency_tests/build/
+  echo "sv_timestamp_logger built succesfully"
+
+  # Call playbook
+  cd ../ansible
+  cqfd run ansible-playbook \
+  -i inventories_private/ci_publisher.yaml \
+  -i inventories_private/ci_vms.yaml \
+  --limit "guest0,sv_publisher" \
+  playbooks/ci_latency_tests.yaml \
+  -e "pcap=Df_Tri_Z1.pcap"
+  echo "Latency tests launched succesfully"
+
+  mv ci_latency_tests/results/ts_guest0.txt "${WORK_DIR}/ci/test-report-pdf/include/"
+  mv ci_latency_tests/results/ts_sv_publisher.txt "${WORK_DIR}/ci/test-report-pdf/include/"
+
+  # Launch script
+  cd ../ci/latency-tests-analysis/scripts
+  python3 generate_latency_report.py -o "${WORK_DIR}/ci/test-report-pdf/include/"
+
+  # This move is needed for test-report-pdf to work correctly.
+  # By copying the latency reports adoc in the include directory under the
+  # "notes.adoc" name, it will automatically be append at the end of the report.
+  mv latency-tests-report.adoc "${WORK_DIR}/ci/test-report-pdf/include/notes.adoc"
+}
+
 # Generate the test report and upload it
 generate_report() {
 
@@ -232,8 +266,12 @@ case "$1" in
     deploy_vms
     exit 0
     ;;
-  tests_vm)
-    tests_vm
+  test_vms)
+    test_vms
+    exit 0
+    ;;
+  test_latency)
+    test_latency
     exit 0
     ;;
   report)
