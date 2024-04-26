@@ -26,7 +26,7 @@ def compute_latency(vm, output):
 
     # Read the differences file
     filename = os.path.join(output, f"differences_{vm}.txt")
-    latencies = np.genfromtxt(filename, delimiter=":", usecols=[2], dtype=int)
+    latencies = np.genfromtxt(filename,delimiter=":", usecols=[1], dtype=int)
     return latencies
 
 def get_stream_count(vm, output):
@@ -70,11 +70,12 @@ def generate_adoc(output):
         vm_line = textwrap.dedent(
                 """
                 === VM {_vm_}
+                {{set:cellbgcolor!}}
                 |===
                 |Number of stream |Minimum latency |Maximum latency |Average latency
                 |{_stream_} |{_minlat_} us |{_maxlat_} us |{_avglat_} us
                 |===
-                image::{_output_}/latency_histogram_{_vm_}.png[]
+                image::{_path_}[]
                 """
         )
         for vm in vm_names:
@@ -87,7 +88,7 @@ def generate_adoc(output):
                         _minlat_= compute_min(latencies),
                         _maxlat_= compute_max(latencies),
                         _avglat_= compute_average(latencies),
-                        _output_= filename
+                        _path_= filename
                     )
             )
 
