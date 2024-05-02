@@ -7,12 +7,10 @@ import matplotlib.pyplot as plt
 import textwrap
 import numpy as np
 
-ADOC_FILE_PATH = "latency-tests-report.adoc"
-
 def compute_latency(vm, output):
     # Execute the AWK command to calculate latencies
     process = subprocess.run(f"awk -F : -v vm={vm} -v output={output}/ \
-                             -f compute_latency.awk \
+                             -f {output}/compute_latency.awk \
                              {output}/ts_sv_publisher.txt\
                              {output}/ts_{vm}.txt",
                              shell=True,
@@ -61,7 +59,7 @@ def save_latency_histogram(latencies, vm, output):
     return filename
 
 def generate_adoc(output):
-    with open(ADOC_FILE_PATH, "w", encoding="utf-8") as adoc_file:
+    with open(f"{output}/notes.adoc", "w", encoding="utf-8") as adoc_file:
         vm_result_files = glob.glob(str(output) + "/ts_guest*.txt")
         vm_names = [file.split("ts_")[1].split(".txt")[0]
                     for file in vm_result_files]
@@ -75,7 +73,7 @@ def generate_adoc(output):
                 |Number of stream |Minimum latency |Maximum latency |Average latency
                 |{_stream_} |{_minlat_} us |{_maxlat_} us |{_avglat_} us
                 |===
-                image::{_path_}[]
+                image::latency_histogram_{_vm_}.png[]
                 """
         )
         for vm in vm_names:
@@ -88,7 +86,6 @@ def generate_adoc(output):
                         _minlat_= compute_min(latencies),
                         _maxlat_= compute_max(latencies),
                         _avglat_= compute_average(latencies),
-                        _path_= filename
                     )
             )
 
