@@ -190,7 +190,7 @@ test_latency() {
   echo "sv_timestamp_logger built succesfully"
 
   # Call playbook
-  cd ../ansible
+  cd ${WORK_DIR}/ansible
   cqfd run ansible-playbook \
   --limit "guest0,sv_publisher" \
   playbooks/ci_latency_tests.yaml \
