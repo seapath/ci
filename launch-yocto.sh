@@ -35,7 +35,9 @@ fi
 if [ -z "${INVENTORY_VM}" ] ; then
   INVENTORY_VM=inventories_private/ci_vms.yml
 fi
-
+if [ -z "${INVENTORY_PUBLISHER}" ]; then
+  INVENTORY_PUBLISHER=inventories_private/ci_publisher.yml
+fi
 if [ -z "${ANSIBLE_INVENTORY}" ] ; then
   ANSIBLE_INVENTORY="inventories_private/ci_yocto_standalone.yaml"
 fi
@@ -170,6 +172,13 @@ test_vms() {
 
 # Prepare and launch latency tests
 test_latency() {
+
+  # Add inventory files
+  # This file cannot be added at the beginning of launch-yocto.sh because it is
+  # used only during these steps
+  ANSIBLE_INVENTORY="${ANSIBLE_INVENTORY},${INVENTORY_VM},${INVENTORY_PUBLISHER}"
+  CQFD_EXTRA_RUN_ARGS="${CQFD_EXTRA_RUN_ARGS} -e ANSIBLE_INVENTORY=${ANSIBLE_INVENTORY}"
+
   # Build sv timestamp logger
   cd sv_timestamp_logger
   docker build . --tag sv_timestamp_logger -f Dockerfile
@@ -180,8 +189,6 @@ test_latency() {
   # Call playbook
   cd ../ansible
   cqfd run ansible-playbook \
-  -i inventories_private/ci_publisher.yaml \
-  -i inventories_private/ci_vms.yaml \
   --limit "guest0,sv_publisher" \
   playbooks/ci_latency_tests.yaml \
   -e "pcap=Df_Tri_Z1.pcap"
