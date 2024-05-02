@@ -186,7 +186,7 @@ test_latency() {
   cd ${SV_TIMESTAMP_LOGGER_SOURCES}
   docker build . --tag sv_timestamp_logger -f Dockerfile
   docker image save -o sv_timestamp_logger.tar sv_timestamp_logger
-  mv sv_timestamp_logger.tar ../ansible/ci_latency_tests/build/
+  mv sv_timestamp_logger.tar ${WORK_DIR}/ansible/ci_latency_tests/build/
   echo "sv_timestamp_logger built succesfully"
 
   # Call playbook
@@ -201,7 +201,7 @@ test_latency() {
   mv ci_latency_tests/results/ts_sv_publisher.txt "${WORK_DIR}/ci/test-report-pdf/include/"
 
   # Launch script
-  cd ../ci/latency-tests-analysis/scripts
+  cd ${WORK_DIR}/ci/latency-tests-analysis/scripts
   python3 generate_latency_report.py -o "${WORK_DIR}/ci/test-report-pdf/include/"
 
   # This move is needed for test-report-pdf to work correctly.
