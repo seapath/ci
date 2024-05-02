@@ -186,28 +186,31 @@ test_latency() {
   cd ${SV_TIMESTAMP_LOGGER_SOURCES}
   docker build . --tag sv_timestamp_logger -f Dockerfile
   docker image save -o sv_timestamp_logger.tar sv_timestamp_logger
+  if [ ! -e  "${WORK_DIR}/ansible/ci_latency_tests/build/" ]; then
+      mkdir "${WORK_DIR}/ansible/ci_latency_tests/build/"
+  fi
   mv sv_timestamp_logger.tar ${WORK_DIR}/ansible/ci_latency_tests/build/
   echo "sv_timestamp_logger built succesfully"
 
   # Call playbook
   cd ${WORK_DIR}/ansible
   cqfd run ansible-playbook \
-  --limit "guest0,sv_publisher" \
+  --limit "yoctoCI,guest0,sv_publisher" \
   playbooks/ci_latency_tests.yaml \
   -e "pcap=Df_Tri_Z1.pcap"
   echo "Latency tests launched succesfully"
 
-  mv ci_latency_tests/results/ts_guest0.txt "${WORK_DIR}/ci/test-report-pdf/include/"
-  mv ci_latency_tests/results/ts_sv_publisher.txt "${WORK_DIR}/ci/test-report-pdf/include/"
-
   # Launch script
-  cd ${WORK_DIR}/ci/latency-tests-analysis/scripts
-  python3 generate_latency_report.py -o "${WORK_DIR}/ci/test-report-pdf/include/"
+  cp "${WORK_DIR}/ci/latency-tests-analysis/scripts/compute_latency.awk" ci_latency_tests/results/
+  cp "${WORK_DIR}/ci/latency-tests-analysis/scripts/generate_latency_report.py" ci_latency_tests/results/
+  cqfd run python3 ci_latency_tests/results/generate_latency_report.py -o "${WORK_DIR}/ansible/ci_latency_tests/results"
 
-  # This move is needed for test-report-pdf to work correctly.
-  # By copying the latency reports adoc in the include directory under the
-  # "notes.adoc" name, it will automatically be append at the end of the report.
-  mv latency-tests-report.adoc "${WORK_DIR}/ci/test-report-pdf/include/notes.adoc"
+  # Move report and images to the test report directory
+  cp "${WORK_DIR}/ansible/ci_latency_tests/results/notes.adoc" "${WORK_DIR}/ci/test-report-pdf/include/"
+  mkdir -p "${WORK_DIR}/ci/test-report-pdf/doc/images/"
+  for img in "${WORK_DIR}/ansible/ci_latency_tests/results/latency_histogram_guest*.png"; do
+	mv $img "${WORK_DIR}/ci/test-report-pdf/doc/images/"
+  done
 }
 
 # Generate the test report and upload it
