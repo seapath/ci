@@ -135,6 +135,7 @@ deploy_vms() {
 
   cd ansible
   cqfd run ansible-playbook \
+  --limit "guest0"
   playbooks/ci_vms_standalone_ptp.yaml
   echo "test VMs deployed successfully"
 }
