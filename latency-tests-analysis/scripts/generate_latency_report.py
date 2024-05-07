@@ -43,7 +43,7 @@ def compute_average(latencies):
 
 def save_latency_histogram(latencies, vm, output):
     # Plot latency histograms
-    plt.hist(latencies, bins=20, alpha=0.7)
+    plt.hist(latencies, bins=20, alpha=0.7, range=(0, np.max(latencies)))
 
     # Add titles and legends
     plt.xlabel("Latency (us)")
