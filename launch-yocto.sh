@@ -32,9 +32,6 @@ fi
 if [ -z "${SEAPATH_SSH_BASE_REPO}" ] ; then
     SEAPATH_SSH_BASE_REPO="git@github.com:seapath"
 fi
-if [ -z "${SV_TIMESTAMP_LOGGER_SOURCES}" ] ; then
-    SV_TIMESTAMP_LOGGER_SOURCES="/etc/seapath-ci/sv_timestamp_logger"
-fi
 if [ -z "${INVENTORY_VM}" ] ; then
   INVENTORY_VM=inventories_private/ci_vms.yml
 fi
@@ -182,8 +179,13 @@ test_latency() {
   ANSIBLE_INVENTORY="${ANSIBLE_INVENTORY},${INVENTORY_VM},${INVENTORY_PUBLISHER}"
   CQFD_EXTRA_RUN_ARGS="${CQFD_EXTRA_RUN_ARGS} -e ANSIBLE_INVENTORY=${ANSIBLE_INVENTORY}"
 
-  # Build sv timestamp logger
-  cd ${SV_TIMESTAMP_LOGGER_SOURCES}
+  # Fetch sv_parser and sv_timestamp_logger sources
+  git clone -q "https://${SEAPATH_BASE_REPO}/sv_parser"
+  git clone -q "https://${SEAPATH_BASE_REPO}/sv_timestamp_logger"
+  mv ${WORK_DIR}/sv_parser/sv_parser.* ${WORK_DIR}/sv_timestamp_logger/lib
+
+  # Build sv_timestamp_logger
+  cd ${WORK_DIR}/sv_timestamp_logger
   docker build . --tag sv_timestamp_logger -f Dockerfile
   docker image save -o sv_timestamp_logger.tar sv_timestamp_logger
   if [ ! -e  "${WORK_DIR}/ansible/ci_latency_tests/build/" ]; then
