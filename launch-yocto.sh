@@ -44,6 +44,14 @@ fi
 CQFD_EXTRA_RUN_ARGS="-e ANSIBLE_INVENTORY=${ANSIBLE_INVENTORY}"
 export CQFD_EXTRA_RUN_ARGS
 
+if [ -z "${PCAP_LOOP}" ] ; then
+	PCAP_LOOP=10
+fi
+
+if [ -z "${PCAP}" ] ; then
+	PCAP="Df_Tri_Z1.pcap"
+fi
+
 # Standard help message
 usage()
 {
@@ -199,7 +207,8 @@ test_latency() {
   cqfd run ansible-playbook \
   --limit "yoctoCI,guest0,sv_publisher" \
   playbooks/ci_latency_tests.yaml \
-  -e "pcap=Df_Tri_Z1.pcap"
+  -e "pcap=${PCAP}" \
+  -e "pcap_loop=${PCAP_LOOP}"
   echo "Latency tests launched succesfully"
 
   # Launch script
