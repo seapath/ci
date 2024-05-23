@@ -53,9 +53,9 @@ def save_latency_histogram(latencies, vm, output):
     # Save the plot
     if not os.path.exists(output):
         os.makedirs(output)
-    filename = os.path.realpath(f"{output}/latency_histogram_{vm}.png")
-    plt.savefig(filename)
-    print(f"Histogram saved as 'latency_histogram_{vm}.png'.")
+    filename = os.path.realpath(f"{output}/latency_histogram_{vm}.svg")
+    plt.savefig(filename, format='svg')
+    print(f"Histogram saved as 'latency_histogram_{vm}.svg'.")
     return filename
 
 def generate_adoc(output):
@@ -73,7 +73,7 @@ def generate_adoc(output):
                 |Number of stream |Minimum latency |Maximum latency |Average latency
                 |{_stream_} |{_minlat_} us |{_maxlat_} us |{_avglat_} us
                 |===
-                image::latency_histogram_{_vm_}.png[]
+                image::latency_histogram_{_vm_}.svg[align=center]
                 """
         )
         for vm in vm_names:

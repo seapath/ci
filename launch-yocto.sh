@@ -219,7 +219,7 @@ test_latency() {
   # Move report and images to the test report directory
   cp "${WORK_DIR}/ansible/ci_latency_tests/results/notes.adoc" "${WORK_DIR}/ci/test-report-pdf/include/"
   mkdir -p "${WORK_DIR}/ci/test-report-pdf/doc/images/"
-  for img in "${WORK_DIR}/ansible/ci_latency_tests/results/latency_histogram_guest*.png"; do
+  for img in "${WORK_DIR}/ansible/ci_latency_tests/results/latency_histogram_guest*.svg"; do
 	mv $img "${WORK_DIR}/ci/test-report-pdf/doc/images/"
   done
 }
