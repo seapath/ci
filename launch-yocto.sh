@@ -227,15 +227,16 @@ test_latency() {
 # Generate the test report and upload it
 generate_report() {
 
-  # Replace test-report-pdf themes with SEAPATH one
   cd "${WORK_DIR}/ci/test-report-pdf"
-  rm themes/sfl.png
-  mv ../seapath-themes/logo.png themes
-  mv ../seapath-themes/theme.yml themes/sfl-theme.yml
+  # Replace test-report-pdf default logo by SEAPATH one
+  mv ../seapath-themes/logo.png themes/sfl.png
+  # Change contact mailing list to seapath SFL mailing list
+  sed -i 's/contact@savoirfairelinux/seapath@savoirfairelinux/g' test-report.adoc
 
   # Generate test report
   cqfd -q init
-  if ! CQFD_EXTRA_RUN_ARGS="" cqfd -q run ./compile.py -s -m -i include ; then
+  if ! CQFD_EXTRA_RUN_ARGS="" cqfd -q run ./compile.py \
+      -m -i include -C SEAPATH -p \"SEAPATH Yocto\"; then
     die "cqfd error"
   fi
   echo "Test report generated successfully"
