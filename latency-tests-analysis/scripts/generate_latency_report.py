@@ -64,7 +64,14 @@ def generate_adoc(output):
         vm_names = [file.split("ts_")[1].split(".txt")[0]
                     for file in vm_result_files]
 
-        adoc_file.write("== Latency tests\n")
+        adoc_file.write(
+                """== Latency tests
+                   === Test setup
+                   A series of SV packets is sent from the publisher over the local network using a switch. These packets are received by a VM on the SEAPATH hypervisor. SVs are received on a PCI passthrough interface, which means that the physical network card is directly assigned to the VM, enabling direct access to packets without passing through the virtualization layer, thus ensuring low latency.
+
+Latency is the time between sending from the publisher and receiving in the VM, so we need a time base to work with. To do this, we need to synchronize the clocks of the publisher, the hypervisor and the running VM, using PTP.
+                """
+        )
         vm_line = textwrap.dedent(
                 """
                 === VM {_vm_}
