@@ -116,6 +116,7 @@ launch_system_tests() {
   INCLUDE_DIR=${WORK_DIR}/ci/test-report-pdf/include
   mkdir "$INCLUDE_DIR"
   mv "${WORK_DIR}"/ansible/cukinia_*.xml "$INCLUDE_DIR"
+  mv "${WORK_DIR}"/ansible/src/bp28-compliance-matrices/* "$INCLUDE_DIR"
 
   # Check for kernel backtrace error. This is a random error so it must not
   # stop the CI but just display a warning
@@ -236,7 +237,10 @@ generate_report() {
   # Generate test report
   cqfd -q init
   if ! CQFD_EXTRA_RUN_ARGS="" cqfd -q run ./compile.py \
-      -m -i include -C SEAPATH -p \"SEAPATH Yocto\"; then
+      -m -i include -C SEAPATH -p \"SEAPATH Yocto\" \
+      -c include/ANSSI-BP28-M-Recommendations.csv \
+      -c include/ANSSI-BP28-MI-Recommendations.csv \
+      -c include/ANSSI-BP28-MIE-Recommendations.csv; then
     die "cqfd error"
   fi
   echo "Test report generated successfully"
