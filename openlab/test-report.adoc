@@ -1,0 +1,113 @@
+// Copyright (C) 2023 Savoir-faire Linux, Inc.
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+:imagesdir: ./doc/
+:pdf-theme: themes/theme.yml
+:doctype: book
+
+= Test report {project}
+:toc:
+:icons:
+:iconsdir: ./doc/icons/
+:sectnumlevels: 1
+:revdate:
+:author: Savoir-faire Linux
+:email: contact@savoirfairelinux.com
+
+:toc:
+
+== List of supported equipment
+[.center]
+
+* SFL
+** <<SEAPATH CI>>
+
+== Testing Setup
+=== Setup Information
+* Retrieve system information:
+  ** Kernel version and configuration
+  ** Boot options
+  ** CPU information
+  ** Memory information
+  ** Network interfaces
+
+=== System Capabilities
+* Virtualization:
+  ** Check processor support for hardware virtualization technologies (Intel VT-x or AMD-V)
+  ** Ensure hardware virtualization is enabled in UEFI settings
+  ** Verify KVM kernel module is enabled
+
+* Network:
+  ** Ensure network drivers are operational
+  ** Verify SEAPATH's network infrastructure tools, such as OpenVSwitch, are operational
+
+* Real-time:
+  ** Employ Cyclictest to measure real-time system latency:
+    *** Run on isolated CPUs
+    *** Determine worst-case latencies
+
+* Clustering:
+  ** If the machine is part of a cluster
+
+* Update:
+  ** Ensure that the system is upgradable using SWUpdate
+
+=== Hardening & ANSSI-BP28 Compliance
+* Launch SEAPATH cybersecurity tests
+* Verify compliance with ANSSI-BP28 requirements
+* Complete lists of requirements on SEAPATH https://wiki.lfenergy.org/display/SEAP/SEAPATH+and+cybersecurity[on the wiki].
+
+=== Virtual Machine Deployment
+* Deploy and test two VMs:
+  ** One real-time and isolated
+  ** One non-real-time and non-isolated
+* Use VMs for:
+  ** Real-time (cyclic test)
+  ** SV IEC61850 packet network latency tests
+
+=== Network Latency Testing
+* Perform SV IEC61850 packet network latency tests
+* Compute latency between publisher and userspace of VM 
+
+image::setup_lat.png[network latency test setup, 490, align=center]
+
+=== SEAPATH CI
+==== Setup Information
+==== System Capabilities
+==== Hardening and ANSSI-BP28 Compliance
+==== Virtual Machine Deployment
+==== Network Latency Testing
+
+include::test-report-content.adoc[]
+
+== About this documentation
+
+This documentation uses the AsciiDoc documentation generator. It is a convenient
+format that allows using plain-text formatted writing that can later be
+converted to various output formats such as HTML and PDF.
+
+In order to generate an HTML version of this documentation, use the following
+command (the asciidoc package will need to be installed in your Linux
+distribution):
+
+  $ asciidoc test-report.adoc
+
+This will result in a README.html file being generated in the current directory.
+
+If you prefer a PDF version of the documentation instead, use the following
+command (the dblatex package will need to be installed on your Linux
+distribution):
+
+  $ asciidoctor-pdf test-report.adoc
