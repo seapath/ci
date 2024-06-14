@@ -1,0 +1,47 @@
+:imagesdir: ./doc/images/
+:pdf-theme: themes/theme.yml
+:doctype: book
+
+= Test report
+:toc:
+:icons:
+:iconsdir: ./doc/icons/
+:sectnumlevels: 1
+:revdate:
+:author: SEAPATH 
+:email: seapath@savoirfairelinux
+:year: 2024
+
+:toc:
+
+== List of supported equipment
+[.center]
+
+* Vendor X
+** <<Board Y>>
+** <<Board Z>>
+
+== Testing Setup
+To guarantee SEAPATH certification, a series of tests is carried out.
+
+=== Setup Information
+
+=== System capatibilities
+=== Hardening & ABP-28 Compliance
+=== Cyclic testing
+=== Network latency testing 
+
+== Test report
+=== Board Y
+==== Installation setup
+==== System
+==== Cyber
+==== Real-time
+==== IEC 61850
+
+=== Board Z
+==== Installation setup
+==== System
+==== Cyber
+==== Real-time
+==== IEC 61850
