@@ -22,20 +22,52 @@
 ** <<Board Z>>
 
 == Testing Setup
-To guarantee SEAPATH certification, a series of tests is carried out.
-
 === Setup Information
+* Retrieve system information:
+  ** Kernel version and configuration
+  ** Boot options
+  ** CPU information
+  ** Memory information
+  ** Network interfaces
 
-=== System capatibilities
+=== System Capabilities
+* Virtualization:
+  ** Check processor support for hardware virtualization technologies (Intel VT-x or AMD-V)
+  ** Ensure hardware virtualization is enabled in UEFI settings
+  ** Verify KVM kernel module is enabled
+
+* Network:
+  ** Ensure network drivers are operational
+  ** Verify SEAPATH's network infrastructure tools, such as OpenVSwitch, are operational
+
 === Hardening & ABP-28 Compliance
-=== Cyclic testing
-=== Network latency testing 
+
+=== Virtual Machine Deployment
+* Deploy and test two VMs:
+  ** One real-time and isolated
+  ** One non-real-time and non-isolated
+* Use VMs for:
+  ** Real-time (cyclic test)
+  ** SV IEC61850 packet network latency tests
+
+=== Cyclic Testing
+* Employ Cyclictest to measure real-time system latency:
+  ** Run on isolated CPUs
+  ** Determine worst-case latencies
+
+=== Network Latency Testing
+* Perform SV IEC61850 packet network latency tests
+* Compute latency between publisher and VM system clocks
+
+image::setup_lat.png[network latency test setup, 490, align=center]
+
 
 == Test report
 === Board Y
 ==== Installation setup
 ==== System
 ==== Cyber
+==== VM
 ==== Real-time
 ==== IEC 61850
 
@@ -43,5 +75,6 @@ To guarantee SEAPATH certification, a series of tests is carried out.
 ==== Installation setup
 ==== System
 ==== Cyber
+==== VM
 ==== Real-time
 ==== IEC 61850
