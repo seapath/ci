@@ -24,12 +24,12 @@ def compute_latency(vm, output):
 
     # Read the differences file
     filename = os.path.join(output, f"differences_{vm}.txt")
-    latencies = np.genfromtxt(filename, delimiter=":", usecols=[1], dtype=int)
+    latencies = np.genfromtxt(filename, delimiter=":", usecols=[2], dtype=int)
     return latencies
 
 def get_stream_count(vm, output):
     filename = os.path.join(output, f"differences_{vm}.txt")
-    data = np.genfromtxt(filename, delimiter=":", usecols=[0], dtype=str)
+    data = np.genfromtxt(filename, delimiter=":", usecols=[1], dtype=str)
     return np.unique(data).size
 
 def compute_min(latencies):
