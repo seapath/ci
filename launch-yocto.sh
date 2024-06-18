@@ -229,7 +229,7 @@ generate_report() {
 
   cd "${WORK_DIR}/ci/test-report-pdf"
   # Replace test-report-pdf default logo by SEAPATH one
-  mv ../seapath-themes/logo.png themes/sfl.png
+  mv "${WORK_DIR}/ci/seapath-themes/logo.png" "themes/sfl.png"
   # Change contact mailing list to seapath SFL mailing list
   sed -i 's/contact@savoirfairelinux/seapath@savoirfairelinux/g' test-report.adoc
         
