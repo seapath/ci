@@ -233,6 +233,10 @@ generate_report() {
   mv ../seapath-themes/logo.png themes/sfl.png
   # Change contact mailing list to seapath SFL mailing list
   sed -i 's/contact@savoirfairelinux/seapath@savoirfairelinux/g' test-report.adoc
+        
+  # Move openlab part
+  mv ./openlab/doc/images/* ./test-report-pdf/doc/
+  mv ./openlab/test-report.adoc ./openlab/test-report-skeleton.adoc ./test-report-pdf/
 
   # Generate test report
   cqfd -q init
