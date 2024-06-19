@@ -1,34 +1,27 @@
 import os
-import sys
-import subprocess
 import glob
 import argparse
 import matplotlib.pyplot as plt
 import textwrap
 import numpy as np
 
-def compute_latency(vm, output):
-    # Execute the AWK command to calculate latencies
-    process = subprocess.run(f"awk -F : -v vm={vm} -v output={output}/ \
-                             -f {output}/compute_latency.awk \
-                             {output}/ts_sv_publisher.txt\
-                             {output}/ts_{vm}.txt",
-                             shell=True,
-                             stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE)
-
-    # Check if there was an error executing the command
-    if process.returncode != 0:
-        print("Error executing AWK script", process.stderr.decode())
-        sys.exit(process.returncode)
-
-    # Read the differences file
-    filename = os.path.join(output, f"differences_{vm}.txt")
-    latencies = np.genfromtxt(filename, delimiter=":", usecols=[2], dtype=int)
+def compute_latency(vm,output):
+    vm_path = f"{output}/ts_{vm}.txt"
+    pub_path = f"{output}/ts_sv_publisher.txt"
+    latencies = np.array([]) 
+    with open(vm_path, buffering=10**4) as vm_file, open(pub_path, buffering=10**4) as pub_file:
+        vm_lines = vm_file.readlines()
+        pub_lines = pub_file.readlines()
+        for vm_line, pub_line in zip(vm_lines, pub_lines):
+            iteration_vm, stream_vm, count_vm, ts_vm = vm_line.split(':')
+            iteration_pub, stream_pub, count_pub, ts_pub = pub_line.split(':')
+            if (iteration_vm, stream_vm, count_vm) == (iteration_pub, stream_pub, count_pub):
+                diff = int(ts_vm) - int(ts_pub)
+                latencies = np.append(latencies, diff)
     return latencies
 
-def get_stream_count(vm, output):
-    filename = os.path.join(output, f"differences_{vm}.txt")
+def get_stream_count(output):
+    filename = os.path.join(output, f"ts_sv_publisher.txt")
     data = np.genfromtxt(filename, delimiter=":", usecols=[1], dtype=str)
     return np.unique(data).size
 
@@ -82,7 +75,7 @@ def generate_adoc(output):
             adoc_file.write(
                     vm_line.format(
                         _vm_=vm,
-                        _stream_= get_stream_count(vm,output),
+                        _stream_= get_stream_count(output),
                         _minlat_= compute_min(latencies),
                         _maxlat_= compute_max(latencies),
                         _avglat_= compute_average(latencies),
