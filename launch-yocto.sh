@@ -213,7 +213,6 @@ test_latency() {
   echo "Latency tests launched succesfully"
 
   # Launch script
-  cp "${WORK_DIR}/ci/latency-tests-analysis/scripts/compute_latency.awk" ci_latency_tests/results/
   cp "${WORK_DIR}/ci/latency-tests-analysis/scripts/generate_latency_report.py" ci_latency_tests/results/
   cqfd run python3 ci_latency_tests/results/generate_latency_report.py -o "${WORK_DIR}/ansible/ci_latency_tests/results"
 
