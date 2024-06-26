@@ -85,6 +85,8 @@ image::setup_lat.png[network latency test setup, 490, align=center]
 
 === SEAPATH CI
 ==== Setup Information
+include::include/system_info.adoc[]
+
 ==== System Capabilities
 ==== Hardening and ANSSI-BP28 Compliance
 ==== Virtual Machine Deployment

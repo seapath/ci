@@ -108,7 +108,6 @@ configure_seapath() {
 launch_system_tests() {
   cd ansible
   cqfd run ansible-playbook \
-  -e machines_tested=hypervisors \
   playbooks/ci_all_machines_tests.yaml
   echo "System tests launched successfully"
 
@@ -117,6 +116,7 @@ launch_system_tests() {
   mkdir "$INCLUDE_DIR"
   mv "${WORK_DIR}"/ansible/cukinia_*.xml "$INCLUDE_DIR"
   mv "${WORK_DIR}"/ansible/src/bp28-compliance-matrices/* "$INCLUDE_DIR"
+  mv "${WORK_DIR}"/ansible/system_info.adoc "$INCLUDE_DIR"
 
   # Check for kernel backtrace error. This is a random error so it must not
   # stop the CI but just display a warning
@@ -161,7 +161,7 @@ test_vms() {
 
   cd ansible
   cqfd run ansible-playbook \
-  -e machines_tested=VMs \
+  --limit VMs \
   playbooks/ci_all_machines_tests.yaml
   echo "System tests launched successfully"
 
