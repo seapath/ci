@@ -1,0 +1,17 @@
+[project]
+org='sfl'
+name='test-report-pdf'
+
+[build]
+command=' \
+    cukinia -f junitxml -o examples/simple/results.xml examples/simple/cukinia.conf || true \
+    && ./compile.py -i examples/simple -C SFL -p simple_example \
+    && mv test-report.pdf simple-example.pdf \
+    && cukinia -f junitxml -o examples/complex/results.xml examples/complex/cukinia.conf || true \
+    && ./compile.py -i examples/complex -m -c examples/complex/matrix.csv -C SFL -p complex_example \
+    && mv test-report.pdf complex-example.pdf \
+'
+flavors='sonarqube'
+
+[sonarqube]
+command='/usr/bin/python-sonar.sh'
