@@ -112,7 +112,7 @@ launch_system_tests() {
   echo "System tests launched successfully"
 
   # Generate test report part
-  INCLUDE_DIR=${WORK_DIR}/ci/test-report-pdf/include
+  INCLUDE_DIR=${WORK_DIR}/ci/openlab/include
   mkdir "$INCLUDE_DIR"
   mv "${WORK_DIR}"/ansible/cukinia_*.xml "$INCLUDE_DIR"
   mv "${WORK_DIR}"/ansible/src/bp28-compliance-matrices/* "$INCLUDE_DIR"
@@ -166,7 +166,7 @@ test_vms() {
   echo "System tests launched successfully"
 
   # Generate test report part
-  INCLUDE_DIR=${WORK_DIR}/ci/test-report-pdf/include
+  INCLUDE_DIR=${WORK_DIR}/ci/openlab/include
   mv "${WORK_DIR}"/ansible/cukinia_*.xml "$INCLUDE_DIR"
 
   # Display test results
@@ -217,33 +217,40 @@ test_latency() {
   cqfd run python3 ci_latency_tests/results/generate_latency_report.py -o "${WORK_DIR}/ansible/ci_latency_tests/results"
 
   # Move report and images to the test report directory
-  cp "${WORK_DIR}/ansible/ci_latency_tests/results/notes.adoc" "${WORK_DIR}/ci/test-report-pdf/include/"
+  cp "${WORK_DIR}/ansible/ci_latency_tests/results/notes.adoc" "${WORK_DIR}/ci/openlab/include/"
   for img in "${WORK_DIR}/ansible/ci_latency_tests/results/latency_histogram_guest*.png"; do
-	mv $img "${WORK_DIR}/ci/test-report-pdf/doc/"
+	mv $img "${WORK_DIR}/ci/openlab/doc/"
   done
 }
 
 # Generate the test report and upload it
 generate_report() {
 
-  cd "${WORK_DIR}/ci/test-report-pdf"
+  cd "${WORK_DIR}/ci/openlab"
   # Replace test-report-pdf default logo by SEAPATH one
   mv "${WORK_DIR}/ci/seapath-themes/logo.png" "themes/sfl.png"
   # Change contact mailing list to seapath SFL mailing list
   sed -i 's/contact@savoirfairelinux/seapath@savoirfairelinux/g' test-report.adoc
-        
-  # Move openlab part
-  mv "${WORK_DIR}/ci/openlab/doc/images/setup_lat.png" "${WORK_DIR}/ci/test-report-pdf/doc/"
-  mv -f "${WORK_DIR}/ci/openlab/test-report.adoc" "${WORK_DIR}/ci/test-report-pdf/test-report.adoc"
+
+  # Generate test parts
+  cqfd -q init
+  if ! CQFD_EXTRA_RUN_ARGS="" cqfd -q run ./report.py \
+          -m -i include \
+          -c include/ANSSI-BP28-M-Recommendations.csv \
+          -c include/ANSSI-BP28-MI-Recommendations.csv \
+          -c include/ANSSI-BP28-MIE-Recommendations.csv; then
+            die "cqfd error"
+  fi
 
   # Generate test report
-  cqfd -q init
-  if ! CQFD_EXTRA_RUN_ARGS="" cqfd -q run ./compile.py \
-      -m -i include -C SEAPATH -p \"SEAPATH Yocto\" \
-      -c include/ANSSI-BP28-M-Recommendations.csv \
-      -c include/ANSSI-BP28-MI-Recommendations.csv \
-      -c include/ANSSI-BP28-MIE-Recommendations.csv; then
-    die "cqfd error"
+  if ! CQFD_EXTRA_RUN_ARGS="" cqfd -q run asciidoctor-pdf \
+        -r ./extended-pdf-converter.rb \
+          -a revdate=$(date +%-d %B %Y, %H:%M:%S %Z) \
+          -a year=$(date +%Y) \
+          -a author=SEAPATH \
+          -a project=\"SEAPATH Yocto\" \
+          test-report.adoc; then
+            die "cqfd error"
   fi
   echo "Test report generated successfully"
 
@@ -268,7 +275,7 @@ generate_report() {
   git switch -q "$REPORT_BRANCH"
 
   mkdir -p "$REPORT_DIR"
-  mv "${WORK_DIR}"/ci/test-report-pdf/test-report.pdf "$REPORT_DIR/$REPORT_NAME"
+  mv "${WORK_DIR}"/ci/openlab/test-report.pdf "$REPORT_DIR/$REPORT_NAME"
   git config --local user.email "ci.seapath@gmail.com"
   git config --local user.name "Seapath CI"
   git add "$REPORT_DIR/$REPORT_NAME"
