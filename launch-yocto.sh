@@ -217,7 +217,7 @@ test_latency() {
   cqfd run python3 ci_latency_tests/results/generate_latency_report.py -o "${WORK_DIR}/ansible/ci_latency_tests/results"
 
   # Move report and images to the test report directory
-  cp "${WORK_DIR}/ansible/ci_latency_tests/results/notes.adoc" "${WORK_DIR}/ci/openlab/include/"
+  cp "${WORK_DIR}/ansible/ci_latency_tests/results/latency_tests.adoc" "${WORK_DIR}/ci/openlab/include/"
   for img in "${WORK_DIR}/ansible/ci_latency_tests/results/latency_histogram_guest*.png"; do
 	mv $img "${WORK_DIR}/ci/openlab/doc/"
   done
