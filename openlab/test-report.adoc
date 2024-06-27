@@ -76,7 +76,7 @@
   ** Real-time (cyclic test)
   ** SV IEC61850 packet network latency tests
 
-=== Network Latency Testing
+=== IEC61850 Sampled Value Latency Testing
 * Perform SV IEC61850 packet network latency tests
 * Compute latency between publisher and userspace of VM 
 
@@ -94,8 +94,8 @@ include::include/test-cukinia_yoctoCI.xml.adoc[]
 include::include/test-cukinia_guest0.xml.adoc[]
 include::include/test-cukinia_guest1.xml.adoc[]
 
-==== Network Latency Testing
-include::include/notes.adoc[]
+==== IEC61850 Sampled Value Latency Testing
+include::include/latency_tests.adoc[]
 
 == About this documentation
 

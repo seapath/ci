@@ -52,18 +52,17 @@ def save_latency_histogram(latencies, vm, output):
     return filename
 
 def generate_adoc(output):
-    with open(f"{output}/notes.adoc", "w", encoding="utf-8") as adoc_file:
+    with open(f"{output}/latency_tests.adoc", "w", encoding="utf-8") as adoc_file:
         vm_result_files = glob.glob(str(output) + "/ts_guest*.txt")
         vm_names = [file.split("ts_")[1].split(".txt")[0]
                     for file in vm_result_files]
 
-        adoc_file.write("== Latency tests\n")
         vm_line = textwrap.dedent(
                 """
-                === VM {_vm_}
+                ===== VM {_vm_}
                 {{set:cellbgcolor!}}
                 |===
-                |Number of stream |Minimum latency |Maximum latency |Average latency
+                |Number of IEC61850 Sampled Value |Minimum latency |Maximum latency |Average latency
                 |{_stream_} |{_minlat_} us |{_maxlat_} us |{_avglat_} us
                 |===
                 image::latency_histogram_{_vm_}.png[]
