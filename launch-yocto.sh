@@ -111,12 +111,19 @@ launch_system_tests() {
   playbooks/ci_all_machines_tests.yaml
   echo "System tests launched successfully"
 
+  # Launch cyclic tests
+  cqfd run python3 \
+  scripts/ci_cyclic_tests.py \
+  "${WORK_DIR}/ansible"
+
   # Generate test report part
-  INCLUDE_DIR=${WORK_DIR}/ci/test-report-pdf/include
+  INCLUDE_DIR=${WORK_DIR}/ci/openlab/include
+  IMAGE_DIR=${WORK_DIR}/ci/openlab/doc
   mkdir "$INCLUDE_DIR"
   mv "${WORK_DIR}"/ansible/cukinia_*.xml "$INCLUDE_DIR"
   mv "${WORK_DIR}"/ansible/src/bp28-compliance-matrices/* "$INCLUDE_DIR"
   mv "${WORK_DIR}"/ansible/system_info.adoc "$INCLUDE_DIR"
+  mv "${WORK_DIR}"/ansible/cyclictest_results.png "$IMAGE_DIR"
 
   # Check for kernel backtrace error. This is a random error so it must not
   # stop the CI but just display a warning
