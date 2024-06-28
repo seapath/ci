@@ -108,15 +108,25 @@ configure_seapath() {
 launch_system_tests() {
   cd ansible
   cqfd run ansible-playbook \
+  --limit "standalone_machine,cluster_machines" \
   playbooks/ci_all_machines_tests.yaml
   echo "System tests launched successfully"
 
+  # Generate cyclictest report parts 
+  CPU_CORES=$(cat "${WORK_DIR}/ansible/system_info.adoc" | grep "physical CPUs" |  grep -o "[0-9]\+")    
+  cqfd run scripts/gen_cyclic_test.sh \
+  -i "${WORK_DIR}/ansible/cyclictest_yoctoCI.txt" \
+  -o "${WORK_DIR}/ansible/cyclictest_results_hyp.png" \
+  -n "${CPU_CORES}"
+
   # Generate test report part
   INCLUDE_DIR=${WORK_DIR}/ci/openlab/include
+  IMAGE_DIR=${WORK_DIR}/ci/openlab/doc
   mkdir "$INCLUDE_DIR"
   mv "${WORK_DIR}"/ansible/cukinia_*.xml "$INCLUDE_DIR"
   mv "${WORK_DIR}"/ansible/src/bp28-compliance-matrices/* "$INCLUDE_DIR"
   mv "${WORK_DIR}"/ansible/system_info.adoc "$INCLUDE_DIR"
+  mv "${WORK_DIR}"/ansible/cyclictest_results_hyp.png "$IMAGE_DIR"
 
   # Check for kernel backtrace error. This is a random error so it must not
   # stop the CI but just display a warning
@@ -169,6 +179,14 @@ test_vms() {
   INCLUDE_DIR=${WORK_DIR}/ci/openlab/include
   mv "${WORK_DIR}"/ansible/cukinia_*.xml "$INCLUDE_DIR"
 
+  # Generate cyclictest report part
+  IMAGE_DIR=${WORK_DIR}/ci/openlab/doc
+  cqfd run scripts/gen_cyclic_test.sh \
+  -i "${WORK_DIR}/ansible/cyclictest_guest0.txt" \
+  -o "${WORK_DIR}/ansible/cyclictest_results_vm.png" \
+  -n 2
+  mv "${WORK_DIR}"/ansible/cyclictest_results_vm.png "$IMAGE_DIR"
+    
   # Display test results
   if grep '<failure' "$INCLUDE_DIR"/*.xml | grep -q -v '00080'; then
     echo "Test fails, See test report in the section 'Upload test report'"

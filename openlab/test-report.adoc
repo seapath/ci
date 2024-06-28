@@ -106,6 +106,21 @@ include::include/test-cukinia_guest0.xml.adoc[]
 include::include/test-cukinia_guest1.xml.adoc[]
 
 <<<
+==== Real-time testing (Cyclictest)
+The following command is launched:
+[,bash]
+----
+cyclictest -l10000 -m -Sp90 -i200 -h400 -q
+----
+===== Hypervisor
+image::cyclictest_results_hyp.png[]
+
+<<<
+===== Virtual Machines
+====== Guest 0
+image::cyclictest_results_vm.png[]
+
+<<<
 ==== IEC61850 Sampled Value Latency Testing
 include::include/latency_tests.adoc[]
 
