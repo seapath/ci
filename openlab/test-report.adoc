@@ -27,12 +27,14 @@
 :author: Savoir-faire Linux
 :email: contact@savoirfairelinux.com
 
+<<<
 == List of supported equipment
 [.center]
 
 * SFL
 ** <<SEAPATH CI>>
 
+<<<
 == Testing Setup
 === Setup Information
 * Retrieve system information:
@@ -82,21 +84,26 @@
 
 image::images/setup_lat.png[network latency test setup, 490, align=center]
 
+<<<
 == SFL
 === SEAPATH CI
 ==== Setup Information
 include::include/system_info.adoc[]
 
+<<<
 ==== System Capabilities and Hardening
 include::include/test-cukinia_yoctoCI.xml.adoc[]
 
+<<<
 ==== Virtual Machine Deployment
 include::include/test-cukinia_guest0.xml.adoc[]
 include::include/test-cukinia_guest1.xml.adoc[]
 
+<<<
 ==== IEC61850 Sampled Value Latency Testing
 include::include/latency_tests.adoc[]
 
+<<<
 == About this documentation
 
 This documentation uses the AsciiDoc documentation generator. It is a convenient
