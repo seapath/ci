@@ -112,8 +112,8 @@ launch_system_tests() {
   playbooks/ci_all_machines_tests.yaml
   echo "System tests launched successfully"
 
-  # Generate cyclictest report parts 
-  CPU_CORES=$(cat "${WORK_DIR}/ansible/system_info.adoc" | grep "physical CPUs" |  grep -o "[0-9]\+")    
+  # Generate cyclictest report parts
+  CPU_CORES=$(cat "${WORK_DIR}/ansible/system_info.adoc" | grep "physical CPUs" |  grep -o "[0-9]\+")
   cqfd run scripts/gen_cyclic_test.sh \
   -i "${WORK_DIR}/ansible/cyclictest_yoctoCI.txt" \
   -o "${WORK_DIR}/ansible/cyclictest_results_hyp.png" \
@@ -186,7 +186,7 @@ test_vms() {
   -o "${WORK_DIR}/ansible/cyclictest_results_vm.png" \
   -n 2
   mv "${WORK_DIR}"/ansible/cyclictest_results_vm.png "$IMAGE_DIR"
-    
+
   # Display test results
   if grep '<failure' "$INCLUDE_DIR"/*.xml | grep -q -v '00080'; then
     echo "Test fails, See test report in the section 'Upload test report'"
@@ -233,6 +233,14 @@ test_latency() {
   # Launch script
   cp "${WORK_DIR}/ci/latency-tests-analysis/scripts/generate_latency_report.py" ci_latency_tests/results/
   cqfd run python3 ci_latency_tests/results/generate_latency_report.py -o "${WORK_DIR}/ansible/ci_latency_tests/results"
+
+  # Check if latency tests passed
+  if grep -q "FAILED" "${WORK_DIR}/ansible/ci_latency_tests/results/latency_tests.adoc"; then
+    echo "Test fails, See test report in the section 'Upload test report'"
+    exit 1
+  else
+    echo "All tests pass"
+  fi
 
   # Move report and images to the test report directory
   cp "${WORK_DIR}/ansible/ci_latency_tests/results/latency_tests.adoc" "${WORK_DIR}/ci/openlab/include/"
