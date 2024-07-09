@@ -12,14 +12,16 @@ GREEN_COLOR = "#90EE90"
 RED_COLOR = "#F08080"
 ORANGE_COLOR = "#ee6644"
 
+
 class CukiniaTest(TestCase):
-    '''
+    """
     Custom class to get property value in TestCase
-    '''
+    """
+
     def get_property_value(self, name):
-        '''
+        """
         Gets a property from a testcase.
-        '''
+        """
         props = self.child(Properties)
         if props is None:
             return None
@@ -28,21 +30,24 @@ class CukiniaTest(TestCase):
                 return prop.value
         return None
 
+
 def die(error_string):
     print("ERROR : ", error_string)
     sys.exit(1)
 
+
 # Cukinia test generation
 def check_for_id(suite):
-    '''
+    """
     Check in the first test if there is an id. If yes return True otherwise
     return False
-    '''
+    """
     for test in suite:
-        if(CukiniaTest.fromelem(test).get_property_value("cukinia.id")):
+        if CukiniaTest.fromelem(test).get_property_value("cukinia.id"):
             return True
         else:
             return False
+
 
 def write_table_header(suite, adoc_file, has_test_id):
 
@@ -102,13 +107,14 @@ def write_table_line(test, adoc_file, has_test_id):
     )
 
     if has_test_id:
-        adoc_file.write(table_line_test_id.format(
-            _testid_=test.get_property_value("cukinia.id")))
+        adoc_file.write(
+            table_line_test_id.format(_testid_=test.get_property_value("cukinia.id"))
+        )
 
     if test.is_passed:
         adoc_file.write(
             table_line.format(
-                _testname_=test.name.replace('|', '|'),
+                _testname_=test.name.replace("|", "|"),
                 _result_="PASS",
                 _color_=GREEN_COLOR,
             )
@@ -116,9 +122,9 @@ def write_table_line(test, adoc_file, has_test_id):
     else:
         adoc_file.write(
             table_line.format(
-                _testname_=test.name.replace('|', '|'),
+                _testname_=test.name.replace("|", "|"),
                 _result_="FAIL",
-                _color_=RED_COLOR
+                _color_=RED_COLOR,
             )
         )
 
@@ -136,35 +142,70 @@ def write_table_footer(suite, adoc_file):
         table_footer.format(_nbtests_=suite.tests, _nbfailures_=suite.failures)
     )
 
-def add_compliance_matrix(matrix, xml_files):
-    if not os.path.exists(matrix):
-        die("Matrix file {} doesn't exists".format(matrix))
-    if not os.path.isfile(matrix):
-        die("Matrix file {} is not a file".format(matrix))
+
+# Generate a compliance matrix for each machine
+def generate_compliance_matrix_adoc(matrix, xml_files):
+
     matrix_header = textwrap.dedent(
         """
-            ===== Matrix {_matrixname_}
+            ===== Matrix {_matrixname_} for {_machine_}
             [options="header",cols="6,2,1",frame=all, grid=all]
             |===
             |Requirement |Test id |Status
         """
-        )
-    with open(f"{args.include_dir}/test-{os.path.basename(matrix)}.adoc", "w", encoding="utf-8") as adoc_file:
-        adoc_file.write(matrix_header.format(_matrixname_=matrix))
-        with open(matrix, "r", encoding="utf-8") as matrix_file:
-            requirements = list(sorted(csv.reader(matrix_file)))
-            # requirements is a list, each item of the list has the form
-            # ["requirement name", test_ID]
-            write_matrix_tests(requirements, xml_files, adoc_file)
-            matrix_footer = textwrap.dedent(
-                """
-                |===
-                """
-            )
-            adoc_file.write(matrix_footer)
+    )
+
+    matrix_footer = textwrap.dedent(
+        """
+        |===
+        """
+    )
+
+    machines_list = []
+    for xml in xml_files:
+        for suite in xml:
+            for test in suite:
+                if test.classname not in machines_list:
+                    machines_list.append(test.classname)
+
+    return_code = 0
+
+    if not os.path.exists(matrix):
+        die("Matrix file {} doesn't exists".format(matrix))
+    if not os.path.isfile(matrix):
+        die("Matrix file {} is not a file".format(matrix))
+
+    for machine in machines_list:
+        with open(
+            f"{args.include_dir}/test-{machine}-{os.path.basename(matrix)}.adoc",
+            "w",
+            encoding="utf-8",
+        ) as adoc_file:
+            with open(matrix, "r", encoding="utf-8") as matrix_file:
+                requirements = list(sorted(csv.reader(matrix_file)))
+                # requirements is a list, each item of the list has the form
+                # ["requirement name", test_ID]
+
+                adoc_file.write(
+                    matrix_header.format(
+                        _matrixname_=matrix,
+                        _machine_=machine,
+                    )
+                )
+
+                ret = write_matrix_tests(requirements, machine, xml_files, adoc_file)
+                if ret == 1:
+                    return_code = 1
+
+                adoc_file.write(matrix_footer)
+
+    return return_code
 
 
-def write_matrix_tests(requirements, xml_files, adoc_file):
+def write_matrix_tests(requirements, machine_name, xml_files, adoc_file):
+
+    return_code = 0
+
     matrix_line_req = textwrap.dedent(
         """
         .{_nbtests_}+|{_req_}
@@ -195,7 +236,7 @@ def write_matrix_tests(requirements, xml_files, adoc_file):
                     _req_=req,
                 )
             )
-        present, passed = check_test(test_id, xml_files)
+        present, passed = check_test(test_id, machine_name, xml_files)
         if not present:
             adoc_file.write(
                 matrix_line_test.format(
@@ -204,7 +245,8 @@ def write_matrix_tests(requirements, xml_files, adoc_file):
                     _color_=ORANGE_COLOR,
                 )
             )
-            die(f"ERROR : Test id {test_id} is not present")
+            print(f"Test id {test_id} is not present for {machine_name}")
+            return_code = 1
         elif passed:
             adoc_file.write(
                 matrix_line_test.format(
@@ -221,11 +263,13 @@ def write_matrix_tests(requirements, xml_files, adoc_file):
                     _color_=RED_COLOR,
                 )
             )
+    return return_code
+
 
 # This function read all the xml and look for all tests that matches a given ID.
 # It return present=True if the ID is found at least once
 # It return passed=False if at least one test is failed.
-def check_test(test_id, xml_files):
+def check_test(test_id, machine_name, xml_files):
 
     present = False
     passed = True
@@ -233,33 +277,30 @@ def check_test(test_id, xml_files):
     for xml in xml_files:
         for suite in xml:
             for test in suite:
-                current_id = CukiniaTest.fromelem(test).get_property_value(
-                    "cukinia.id"
-                )
+                current_id = CukiniaTest.fromelem(test).get_property_value("cukinia.id")
                 if current_id == test_id:
-                    present = True
-                    if not test.is_passed:
-                        passed = False
+                    if test.classname == machine_name or not args.add_machine_name:
+                        present = True
+                        if not test.is_passed:
+                            passed = False
     return present, passed
 
-def generate_adoc(file):
-    with open(f"{args.include_dir}/test-{os.path.basename(file)}.adoc", "w", encoding="utf-8") as adoc_file:
+
+def generate_xml_adoc(file):
+    with open(
+        f"{args.include_dir}/test-{os.path.basename(file)}.adoc", "w", encoding="utf-8"
+    ) as adoc_file:
         xml_file = JUnitXml.fromfile(file)
         for suite in xml_file:
             has_test_id = check_for_id(suite)
             write_table_header(suite, adoc_file, has_test_id)
             for test in suite:
-                write_table_line(CukiniaTest.fromelem(test), adoc_file,
-                                 has_test_id)
+                write_table_line(CukiniaTest.fromelem(test), adoc_file, has_test_id)
             write_table_footer(suite, adoc_file)
-            if args.compliance_matrix:
-                if not has_test_id:
-                    die(
-                    "Can't include compliance matrix, test id feature is not enabled"
-                    )
 
-# Report generation
-def open_test_files(directory):
+
+# open xml files and generate one adoc file per xml
+def generate_tests_adoc(directory):
     if not os.path.isdir(directory):
         die("Directory {} does not exists".format(directory))
     files = glob.glob(os.path.join(directory, "*.xml"))
@@ -268,11 +309,12 @@ def open_test_files(directory):
     xml_files = []
     for f in files:
         xml_files.append(JUnitXml.fromfile(f))
-        generate_adoc(f)
+        generate_xml_adoc(f)
     return xml_files
 
+
 def parse_arguments():
-    parser= argparse.ArgumentParser()
+    parser = argparse.ArgumentParser()
     parser.add_argument(
         "-i",
         "--include_dir",
@@ -298,9 +340,14 @@ def parse_arguments():
     )
     return parser.parse_args()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
+    return_code = 0
     args = parse_arguments()
-    xml_files = open_test_files(args.include_dir)
+    xml_files = generate_tests_adoc(args.include_dir)
     if args.compliance_matrix:
         for matrix in args.compliance_matrix:
-            add_compliance_matrix(matrix, xml_files)
+            ret = generate_compliance_matrix_adoc(matrix, xml_files)
+            if ret == 1:
+                return_code = 1
+    sys.exit(return_code)
