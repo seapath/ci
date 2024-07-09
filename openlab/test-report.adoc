@@ -96,9 +96,9 @@ include::include/test-cukinia_yoctoCI.xml.adoc[]
 
 <<< 
 ==== ANSSI-BP28 Compliance
-include::include/test-ANSSI-BP28-M-Recommendations.csv.adoc[]
-include::include/test-ANSSI-BP28-MI-Recommendations.csv.adoc[]
-include::include/test-ANSSI-BP28-MIE-Recommendations.csv.adoc[]
+include::include/test-yoctoCI-ANSSI-BP28-M-Recommendations.csv.adoc[]
+include::include/test-yoctoCI-ANSSI-BP28-MI-Recommendations.csv.adoc[]
+include::include/test-yoctoCI-ANSSI-BP28-MIE-Recommendations.csv.adoc[]
 
 <<<
 ==== Virtual Machine Deployment
