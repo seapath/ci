@@ -258,13 +258,22 @@ generate_report() {
   # Change contact mailing list to seapath SFL mailing list
   sed -i 's/contact@savoirfairelinux/seapath@savoirfairelinux/g' test-report.adoc
 
-  # Generate test parts
+  # Generate Yocto CI tests part
   cqfd -q init
   if ! CQFD_EXTRA_RUN_ARGS="" cqfd -q run ./report.py \
           -m -i include \
+          -x include/cukinia_yoctoCI.xml \
           -c include/ANSSI-BP28-M-Recommendations.csv \
           -c include/ANSSI-BP28-MI-Recommendations.csv \
           -c include/ANSSI-BP28-MIE-Recommendations.csv; then
+            die "cqfd error"
+  fi
+
+  # Generate VM tests part
+  if ! CQFD_EXTRA_RUN_ARGS="" cqfd -q run ./report.py \
+          -m -i include \
+          -x include/cukinia_guest0.xml \
+          -x include/cukinia_guest1.xml; then
             die "cqfd error"
   fi
 
