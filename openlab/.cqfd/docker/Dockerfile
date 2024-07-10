@@ -32,6 +32,7 @@ RUN set -x \
         ruby-asciidoctor-pdf \
         unzip \
         wget \
+        gnuplot \
     && rm -rf /var/lib/apt/lists/
 
 RUN pip install junitparser==3.1.0
