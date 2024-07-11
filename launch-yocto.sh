@@ -114,19 +114,21 @@ launch_system_tests() {
 
   # Generate cyclictest report parts
   CPU_CORES=$(cat "${WORK_DIR}/ansible/system_info.adoc" | grep "physical CPUs" |  grep -o "[0-9]\+")
+  cd ../ci/openlab
+  mv "${WORK_DIR}/ansible/cyclictest_yoctoCI.txt" .
   cqfd run scripts/gen_cyclic_test.sh \
-  -i "${WORK_DIR}/ansible/cyclictest_yoctoCI.txt" \
-  -o "${WORK_DIR}/ansible/cyclictest_results_hyp.png" \
-  -n "${CPU_CORES}"
+    -i "../cyclictest_yoctoCI.txt" \
+    -o "../doc/cyclictest_results_hyp.png" \
+    -n "${CPU_CORES}" \
+    -l 100
 
   # Generate test report part
   INCLUDE_DIR=${WORK_DIR}/ci/openlab/include
-  IMAGE_DIR=${WORK_DIR}/ci/openlab/doc
   mkdir "$INCLUDE_DIR"
   mv "${WORK_DIR}"/ansible/cukinia_*.xml "$INCLUDE_DIR"
   mv "${WORK_DIR}"/ansible/src/bp28-compliance-matrices/* "$INCLUDE_DIR"
   mv "${WORK_DIR}"/ansible/system_info.adoc "$INCLUDE_DIR"
-  mv "${WORK_DIR}"/ansible/cyclictest_results_hyp.png "$IMAGE_DIR"
+  mv "${WORK_DIR}"/ci/openlab/scripts/cyclictest.adoc "$INCLUDE_DIR/cyclictest_hyp.adoc"
 
   # Check for kernel backtrace error. This is a random error so it must not
   # stop the CI but just display a warning
@@ -134,6 +136,11 @@ launch_system_tests() {
   if grep '<failure' "$INCLUDE_DIR"/*.xml | grep -q '00080'; then
      echo -e "\033[0;33mWarning :\033[0m kernel back trace detected, see \
          https://github.com/seapath/ansible/issues/164"
+  fi
+
+  if grep -q "FAILED" "$INCLUDE_DIR/cyclictest_hyp.adoc"; then
+    echo "Test fails, See test report in the section 'Upload test report'"
+    exit 1
   fi
 
   # Display test results
@@ -180,12 +187,20 @@ test_vms() {
   mv "${WORK_DIR}"/ansible/cukinia_*.xml "$INCLUDE_DIR"
 
   # Generate cyclictest report part
-  IMAGE_DIR=${WORK_DIR}/ci/openlab/doc
+  cd ../ci/openlab
+  mv "${WORK_DIR}/ansible/cyclictest_guest0.txt" .
   cqfd run scripts/gen_cyclic_test.sh \
-  -i "${WORK_DIR}/ansible/cyclictest_guest0.txt" \
-  -o "${WORK_DIR}/ansible/cyclictest_results_vm.png" \
-  -n 2
-  mv "${WORK_DIR}"/ansible/cyclictest_results_vm.png "$IMAGE_DIR"
+    -i "../cyclictest_guest0.txt" \
+    -o "../doc/cyclictest_results_vm.png" \
+    -n 2 \
+    -l 100
+
+  mv "${WORK_DIR}/ci/openlab/scripts/cyclictest.adoc" "$INCLUDE_DIR/cyclictest_vm.adoc"
+
+  if grep -q "FAILED" "$INCLUDE_DIR/cyclictest_vm.adoc"; then
+    echo "Test fails, See test report in the section 'Upload test report'"
+    exit 1
+  fi
 
   # Display test results
   if grep '<failure' "$INCLUDE_DIR"/*.xml | grep -q -v '00080'; then
