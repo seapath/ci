@@ -22,7 +22,8 @@
 :toclevels: 4
 :icons:
 :iconsdir: ./doc/icons/
-:sectnumlevels: 1
+:sectnums:
+:sectnumlevels: 3
 :revdate:
 :author: Savoir-faire Linux
 :email: contact@savoirfairelinux.com
@@ -33,6 +34,12 @@
 
 * SFL
 ** <<SEAPATH CI>>
+
+<<<
+== Introduction
+The purpose of this document is to certify the correct operation of the open source real-time operating system for virtualizing IEDs: SEAPATH, a project under the governance of the Linux Foundation Energy.
+
+A series of tests has been carried out on a range of equipment from several vendors, in order to certify SEAPATH on them. Certified in virtualization functions, security, real-time functionality and network latency of IEC61850 Sampled Values.
 
 <<<
 == Testing Setup
@@ -80,7 +87,7 @@
 
 === IEC61850 Sampled Value Latency Testing
 * Perform SV IEC61850 packet network latency tests
-* Compute latency between publisher and userspace of VM
+* Compute latency between publisher and VM userspace.
 
 image::images/setup_lat.png[network latency test setup, 490, align=center]
 
