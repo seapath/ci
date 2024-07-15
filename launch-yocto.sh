@@ -49,7 +49,7 @@ if [ -z "${PCAP_LOOP}" ] ; then
 fi
 
 if [ -z "${PCAP}" ] ; then
-	PCAP="Df_Tri_Z1.pcap"
+	PCAP="8_streams_4000_SV.pcap"
 fi
 
 # Standard help message
