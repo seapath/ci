@@ -295,7 +295,7 @@ generate_report() {
   # Generate test report
   if ! CQFD_EXTRA_RUN_ARGS="" cqfd -q run asciidoctor-pdf \
         -r ./extended-pdf-converter.rb \
-          -a revdate=$(date +%-d %B %Y, %H:%M:%S %Z) \
+          -a revdate=$(date "+%-d\ %B\ %Y,\ %H:%M:%S\ %Z") \
           -a year=$(date +%Y) \
           -a author=SEAPATH \
           -a project=\"SEAPATH Yocto\" \
