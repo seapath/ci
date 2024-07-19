@@ -4,42 +4,84 @@ import argparse
 import matplotlib.pyplot as plt
 import textwrap
 import numpy as np
+import subprocess
 
 GREEN_COLOR = "#90EE90"
 RED_COLOR = "#F08080"
 
-def compute_latency(vm,output):
-    vm_path = f"{output}/ts_{vm}.txt"
-    pub_path = f"{output}/ts_sv_publisher.txt"
-    latencies = np.array([])
-    with open(vm_path, buffering=10**4) as vm_file, open(pub_path, buffering=10**4) as pub_file:
-        vm_lines = vm_file.readlines()
-        pub_lines = pub_file.readlines()
-        for vm_line, pub_line in zip(vm_lines, pub_lines):
-            iteration_vm, stream_vm, count_vm, ts_vm = vm_line.split(':')
-            iteration_pub, stream_pub, count_pub, ts_pub = pub_line.split(':')
-            if (iteration_vm, stream_vm, count_vm) == (iteration_pub, stream_pub, count_pub):
-                diff = int(ts_vm) - int(ts_pub)
-                latencies = np.append(latencies, diff)
+def count_line(filename):
+    out = subprocess.Popen(['wc', '-l', filename],
+                         stdout=subprocess.PIPE,
+                         stderr=subprocess.STDOUT
+                         ).communicate()[0]
+    return int(out.partition(b' ')[0])
+
+def compute_latency(sub_sv_path, pub_sv_path):
+    latencies = np.zeros(2000)
+
+    sub_file = open(sub_sv_path, 'r')
+    pub_file = open(pub_sv_path, 'r')
+
+    line_count = 0
+    max_line = max(count_line(sub_sv_path), count_line(pub_sv_path))
+    while line_count < max_line:
+        line_count += 1
+        pub_line = pub_file.readline()
+        sub_line = sub_file.readline()
+        pub_it, pub_stream, pub_index, pub_ts = pub_line.split(':')
+        sub_it, sub_stream, sub_index, sub_ts = sub_line.split(':')
+        if((pub_it, pub_stream, pub_index) == (sub_it, sub_stream, sub_index)):
+            lat = int(sub_ts) - int(pub_ts)
+            if lat < 2001:
+                latencies[lat] += 1
+            else:
+                raise NameError('Latency out of range')
+    sub_file.close()
+    pub_file.close()
     return latencies
 
-def get_stream_count(output):
-    filename = os.path.join(output, f"ts_sv_publisher.txt")
-    data = np.genfromtxt(filename, delimiter=":", usecols=[1], dtype=str)
-    return np.unique(data).size
+def get_stream_count(sub_sv_path, pub_sv_path):
+    stream_ID = []
+
+    sub_file = open(sub_sv_path, 'r')
+    for line in sub_file:
+        _, stream, _, _ = line.split(':')
+        if stream not in stream_ID:
+            stream_ID.append(stream)
+    sub_file.close()
+
+    pub_file = open(pub_sv_path, 'r')
+    for line in pub_file:
+        _, stream, _, _ = line.split(':')
+        if stream not in stream_ID:
+            stream_ID.append(stream)
+    pub_file.close()
+    return len(stream_ID)
 
 def compute_min(latencies):
-    return np.min(latencies) if latencies.size > 0 else None
+    if latencies.size > 0:
+        for i in range(latencies.size):
+            if latencies[i] != 0:
+                return i
+    return None
 
 def compute_max(latencies):
-    return np.max(latencies) if latencies.size > 0 else None
+    if latencies.size > 0:
+        for i in reversed(range(latencies.size)):
+            if latencies[i] != 0:
+                return i
+    return None
 
 def compute_average(latencies):
-    return np.round(np.mean(latencies)) if latencies.size > 0 else None
+    mean_num = 0
+    mean_den = 1 / sum(latencies)
+    for i in range(latencies.size):
+        mean_num += i * latencies[i]
+    return np.round(mean_num * mean_den) if latencies.size > 0 else None
 
 def save_latency_histogram(latencies, vm, output, limit=None):
     # Plot latency histograms
-    plt.hist(latencies, bins=20, alpha=0.7, range=(0, np.max(latencies)))
+    plt.bar(np.arange(latencies.size),latencies)
 
     # Add titles and legends
     plt.xlabel("Latency (us)")
@@ -58,7 +100,6 @@ def save_latency_histogram(latencies, vm, output, limit=None):
     plt.savefig(filename, format='png')
     plt.close()
     print(f"Histogram saved as 'latency_histogram_{vm}.png'.")
-    return filename
 
 def generate_adoc(output, limit):
     with open(f"{output}/latency_tests.adoc", "w", encoding="utf-8") as adoc_file:
@@ -90,13 +131,15 @@ def generate_adoc(output, limit):
         )
 
         for vm in vm_names:
-            latencies = compute_latency(vm, output)
-            filename = save_latency_histogram(latencies,vm,output, limit)
+            sub_sv_path = f"{output}/ts_{vm}.txt"
+            pub_sv_path = f"{output}/ts_sv_publisher.txt"
+            latencies = compute_latency(sub_sv_path, pub_sv_path)
+            save_latency_histogram(latencies,vm,output, limit)
             maxlat= compute_max(latencies)
             adoc_file.write(
                     vm_line.format(
                         _vm_=vm,
-                        _stream_= get_stream_count(output),
+                        _stream_= get_stream_count(sub_sv_path, pub_sv_path),
                         _minlat_= compute_min(latencies),
                         _maxlat_= maxlat,
                         _avglat_= compute_average(latencies),
