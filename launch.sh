@@ -172,8 +172,9 @@ launch_vm_tests() {
   cqfd run ansible-playbook \
   --key-file "${PRIVATE_KEYFILE_PATH}" \
   --limit VMs \
-  playbooks/cluster_setup_debian.yaml \
-  playbooks/cluster_setup_hardened_debian.yaml
+  playbooks/seapath_setup_prerequisdebian.yaml \
+  playbooks/seapath_setup_hardened_debian.yaml \
+  playbooks/ci_prepare_VMs.yaml
 
   cqfd run ansible-playbook \
   --key-file "${PRIVATE_KEYFILE_PATH}" \
