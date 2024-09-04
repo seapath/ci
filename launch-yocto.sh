@@ -99,7 +99,7 @@ configure_seapath() {
   cd ansible
   cqfd run ansible-playbook \
   --skip-tags "package-install" \
-  playbooks/ci_standalone_setup.yaml
+  roles/ci_yocto/playbooks/ci_standalone_setup.yaml
   echo "SEAPATH set up succesfully"
 }
 
@@ -109,7 +109,7 @@ launch_system_tests() {
   cd ansible
   cqfd run ansible-playbook \
   --limit "standalone_machine,cluster_machines" \
-  playbooks/ci_all_machines_tests.yaml
+  roles/ci_yocto/playbooks/ci_all_machines_tests.yaml
   echo "System tests launched successfully"
 
   # Generate cyclictest report parts
@@ -126,7 +126,7 @@ launch_system_tests() {
   INCLUDE_DIR=${WORK_DIR}/ci/openlab/include
   mkdir "$INCLUDE_DIR"
   mv "${WORK_DIR}"/ansible/cukinia_*.xml "$INCLUDE_DIR"
-  mv "${WORK_DIR}"/ansible/src/bp28-compliance-matrices/* "$INCLUDE_DIR"
+  mv "${WORK_DIR}"/ansible/roles/ci_yocto/bp28-compliance-matrices/* "$INCLUDE_DIR"
   mv "${WORK_DIR}"/ansible/system_info.adoc "$INCLUDE_DIR"
   mv "${WORK_DIR}"/ci/openlab/scripts/cyclictest.adoc "$INCLUDE_DIR/cyclictest_hyp.adoc"
 
@@ -163,7 +163,7 @@ deploy_vms() {
 
   cd ansible
   cqfd run ansible-playbook \
-  playbooks/ci_vms_standalone_ptp.yaml
+  roles/ci_yocto/playbooks/ci_vms_standalone_ptp.yaml
   echo "test VMs deployed successfully"
 }
 
@@ -179,7 +179,7 @@ test_vms() {
   cd ansible
   cqfd run ansible-playbook \
   --limit VMs \
-  playbooks/ci_all_machines_tests.yaml
+  roles/ci_yocto/playbooks/ci_all_machines_tests.yaml
   echo "System tests launched successfully"
 
   # Generate test report part
@@ -220,6 +220,7 @@ test_latency() {
   # used only during these steps
   ANSIBLE_INVENTORY="${ANSIBLE_INVENTORY},${INVENTORY_VM},${INVENTORY_PUBLISHER}"
   CQFD_EXTRA_RUN_ARGS="${CQFD_EXTRA_RUN_ARGS} -e ANSIBLE_INVENTORY=${ANSIBLE_INVENTORY}"
+  CI_ROLE_DIR="${WORK_DIR}/ansible/roles/ci_yocto"
 
   # Fetch sv_parser and sv_timestamp_logger sources
   git clone -q "https://${SEAPATH_BASE_REPO}/sv_parser"
@@ -230,27 +231,26 @@ test_latency() {
   cd ${WORK_DIR}/sv_timestamp_logger
   docker build . --tag sv_timestamp_logger -f Dockerfile
   docker image save -o sv_timestamp_logger.tar sv_timestamp_logger
-  if [ ! -e  "${WORK_DIR}/ansible/ci_latency_tests/build/" ]; then
-      mkdir "${WORK_DIR}/ansible/ci_latency_tests/build/"
-  fi
-  mv sv_timestamp_logger.tar ${WORK_DIR}/ansible/ci_latency_tests/build/
+  mkdir -p "${CI_ROLE_DIR}/ci_latency_tests/build/"
+  mv sv_timestamp_logger.tar "${CI_ROLE_DIR}/ci_latency_tests/build/"
   echo "sv_timestamp_logger built succesfully"
 
   # Call playbook
   cd ${WORK_DIR}/ansible
   cqfd run ansible-playbook \
   --limit "yoctoCI,guest0,sv_publisher" \
-  playbooks/ci_latency_tests.yaml \
+  "${CI_ROLE_DIR}/playbooks/ci_latency_tests.yaml" \
   -e "pcap=${PCAP}" \
   -e "pcap_loop=${PCAP_LOOP}"
   echo "Latency tests launched succesfully"
 
   # Launch script
-  cp "${WORK_DIR}/ci/latency-tests-analysis/scripts/generate_latency_report.py" ci_latency_tests/results/
-  cqfd run python3 ci_latency_tests/results/generate_latency_report.py -o "${WORK_DIR}/ansible/ci_latency_tests/results"
+  mkdir -p "${CI_ROLE_DIR}/ci_latency_tests/results/"
+  cp "${WORK_DIR}/ci/latency-tests-analysis/scripts/generate_latency_report.py" "${CI_ROLE_DIR}/ci_latency_tests/results/"
+  cqfd run python3 "${CI_ROLE_DIR}/ci_latency_tests/results/generate_latency_report.py" -o "${CI_ROLE_DIR}/ci_latency_tests/results"
 
   # Check if latency tests passed
-  if grep -q "FAILED" "${WORK_DIR}/ansible/ci_latency_tests/results/latency_tests.adoc"; then
+  if grep -q "FAILED" "${CI_ROLE_DIR}/ci_latency_tests/results/latency_tests.adoc"; then
     echo "Test fails, See test report in the section 'Upload test report'"
     exit 1
   else
@@ -258,8 +258,8 @@ test_latency() {
   fi
 
   # Move report and images to the test report directory
-  cp "${WORK_DIR}/ansible/ci_latency_tests/results/latency_tests.adoc" "${WORK_DIR}/ci/openlab/include/"
-  for img in "${WORK_DIR}/ansible/ci_latency_tests/results/latency_histogram_guest*.png"; do
+  cp "${CI_ROLE_DIR}/ci_latency_tests/results/latency_tests.adoc" "${WORK_DIR}/ci/openlab/include/"
+  for img in "${CI_ROLE_DIR}/ci_latency_tests/results/latency_histogram_guest*.png"; do
 	mv $img "${WORK_DIR}/ci/openlab/doc/"
   done
 }
