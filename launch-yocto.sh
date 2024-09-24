@@ -247,7 +247,11 @@ test_latency() {
 
   # Launch script
   cp "${WORK_DIR}/ci/latency-tests-analysis/scripts/generate_latency_report.py" ci_latency_tests/results/
-  cqfd run python3 ci_latency_tests/results/generate_latency_report.py -o "${WORK_DIR}/ansible/ci_latency_tests/results"
+  cqfd run python3 ci_latency_tests/results/generate_latency_report.py  \
+    -p "${WORK_DIR}/ansible/ci_latency_tests/results/ts_sv_publisher.txt" \
+    -s "${WORK_DIR}/ansible/ci_latency_tests/results/ts_guest0.txt" \
+    -o "${WORK_DIR}/ansible/ci_latency_tests/results" \
+    --ttot 200
 
   # Check if latency tests passed
   if grep -q "FAILED" "${WORK_DIR}/ansible/ci_latency_tests/results/latency_tests.adoc"; then
@@ -259,7 +263,7 @@ test_latency() {
 
   # Move report and images to the test report directory
   cp "${WORK_DIR}/ansible/ci_latency_tests/results/latency_tests.adoc" "${WORK_DIR}/ci/openlab/include/"
-  for img in "${WORK_DIR}/ansible/ci_latency_tests/results/latency_histogram_guest*.png"; do
+  for img in "${WORK_DIR}/ansible/ci_latency_tests/results/histogram_total_stream_0_latency_guest0.png"; do
 	mv $img "${WORK_DIR}/ci/openlab/doc/"
   done
 }
