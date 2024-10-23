@@ -92,6 +92,9 @@ initialization() {
   cqfd init
   cqfd -b prepare
   echo "Sources prepared succesfully"
+
+  # Prepare openlab
+  cqfd -C ../ci/openlab init
 }
 
 # Launch SEAPATH configuration and hardening
