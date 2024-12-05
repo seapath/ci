@@ -27,10 +27,6 @@ EOF
 
 # Download and prepare the pull request sources
 initialization() {
-  if ! type -p cqfd > /dev/null; then
-    die "cqfd not found"
-  fi
-
   # Get sources
   git clone -q https://github.com/seapath/ansible
   cd ansible
@@ -41,9 +37,13 @@ initialization() {
       echo "No ansible-lint available. Skipping linting."
       exit 0
   fi
+  # Get cqfd
+  wget https://raw.githubusercontent.com/savoirfairelinux/cqfd/8142616feca2a2832693f43dfe70b31c64e723f0/cqfd -O cqfd
+  chmod +x cqfd
+  touch .gitconfig
   # Prepare ansible repository
-  cqfd init
-  cqfd -b prepare
+  ./cqfd init
+  ./cqfd -b prepare
   echo "Sources prepared succesfully"
 }
 
@@ -54,7 +54,7 @@ ansible_lint() {
       echo "No ansible-lint available. Skipping linting."
       exit 0
   fi
-  cqfd -b ansible-lint
+  ./cqfd -b ansible-lint
 }
 
 case "$1" in
