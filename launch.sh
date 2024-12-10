@@ -108,6 +108,12 @@ initialization() {
   echo "Sources prepared succesfully"
 }
 
+# Launch ansible-lint
+ansible_lint() {
+  cd ansible
+  cqfd -b ansible-lint
+}
+
 # Launch Debian configuration and hardening
 configure_debian() {
   cd ansible
@@ -285,6 +291,10 @@ generate_report() {
 case "$1" in
   init)
     initialization
+    exit 0
+    ;;
+  lint)
+    ansible_lint
     exit 0
     ;;
   conf)

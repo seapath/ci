@@ -106,6 +106,12 @@ configure_seapath() {
   echo "SEAPATH set up succesfully"
 }
 
+# Launch ansible-lint
+ansible_lint() {
+  cd ansible
+  cqfd -b ansible-lint
+}
+
 # Prepare and launch cukinia test
 # Send the result of the tests as return code
 launch_system_tests() {
@@ -343,6 +349,10 @@ case "$1" in
     ;;
   conf)
     configure_seapath
+    exit 0
+    ;;
+  lint)
+    ansible_lint
     exit 0
     ;;
   system)
