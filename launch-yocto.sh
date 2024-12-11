@@ -244,9 +244,20 @@ test_latency() {
   -e "pcap_loop=${PCAP_LOOP}"
   echo "Latency tests launched succesfully"
 
-  # Launch script
-  cp "${WORK_DIR}/ci/latency-tests-analysis/scripts/generate_latency_report.py" ci_latency_tests/results/
-  cqfd run python3 ci_latency_tests/results/generate_latency_report.py -o "${WORK_DIR}/ansible/ci_latency_tests/results"
+  # Analyse SV timestamps with sv_timestamp_analysis
+  sv_timestamp_path="${WORK_DIR}/ansible/ci_latency_tests/sv-timestamp-analysis"
+  
+  git clone -q "https://${SEAPATH_BASE_REPO}/sv-timestamp-analysis" ${sv_timestamp_path}
+  cqfd -d "${sv_timestamp_path}/.cqfd" -f "${sv_timestamp_path}/.cqfdrc" init
+
+  cqfd -d "${sv_timestamp_path}/.cqfd" -f "${sv_timestamp_path}/.cqfdrc" run \
+    python3 ${sv_timestamp_path}/sv_timestamp_analysis.py \
+      --sub "${WORK_DIR}/ansible/ci_latency_tests/results/ts_guest0.txt" \
+      --pub "${WORK_DIR}/ansible/ci_latency_tests/results/ts_sv_publisher.txt" \
+      --subscriber_name "guest0" \
+      --stream "0..7" \
+      --max_latency "2000" \
+      -o "${WORK_DIR}/ansible/ci_latency_tests"
 
   # Check if latency tests passed
   if grep -q "FAILED" "${WORK_DIR}/ansible/ci_latency_tests/results/latency_tests.adoc"; then
@@ -258,8 +269,8 @@ test_latency() {
 
   # Move report and images to the test report directory
   cp "${WORK_DIR}/ansible/ci_latency_tests/results/latency_tests.adoc" "${WORK_DIR}/ci/openlab/include/"
-  for img in "${WORK_DIR}/ansible/ci_latency_tests/results/latency_histogram_guest*.png"; do
-	mv $img "${WORK_DIR}/ci/openlab/doc/"
+  for img in "${WORK_DIR}/ansible/ci_latency_tests/results/histogram*guest*.png"; do
+	  mv $img "${WORK_DIR}/ci/openlab/doc/"
   done
 }
 
