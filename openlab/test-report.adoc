@@ -26,7 +26,7 @@
 :sectnumlevels: 3
 :revdate:
 :author: Savoir-faire Linux
-:email: contact@savoirfairelinux.com
+:email: seapath@savoirfairelinux.com
 
 <<<
 == List of supported equipment
