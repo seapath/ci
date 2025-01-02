@@ -44,50 +44,12 @@ A series of tests has been carried out on a range of equipment from several vend
 <<<
 == Testing Setup
 === Setup Information
-* Retrieve system information:
-  ** Kernel version and configuration
-  ** Boot options
-  ** CPU information
-  ** Memory information
-  ** Network interfaces
 
 === System Capabilities
-* Virtualization:
-  ** Check processor support for hardware virtualization technologies (Intel VT-x or AMD-V)
-  ** Ensure hardware virtualization is enabled in UEFI settings
-  ** Verify KVM kernel module is enabled
 
-* Network:
-  ** Ensure network drivers are operational
-  ** Verify SEAPATH's network infrastructure tools, such as OpenVSwitch, are operational
 
-* Real-time:
-  ** Employ Cyclictest to measure real-time system latency:
-    *** Run on isolated CPUs
-    *** Determine worst-case latencies
-
-* Clustering:
-  ** If the machine is part of a cluster
-
-* Update:
-  ** Ensure that the system is upgradable using SWUpdate
-
-=== Hardening & ANSSI-BP28 Compliance
-* Launch SEAPATH cybersecurity tests
-* Verify compliance with ANSSI-BP28 requirements
-* Complete lists of requirements on SEAPATH https://wiki.lfenergy.org/display/SEAP/SEAPATH+and+cybersecurity[on the wiki].
-
-=== Virtual Machine Deployment
-* Deploy and test two VMs:
-  ** One real-time and isolated
-  ** One non-real-time and non-isolated
-* Use VMs for:
-  ** Real-time (cyclic test)
-  ** SV IEC61850 packet network latency tests
 
 === IEC61850 Sampled Value Latency Testing
-* Perform SV IEC61850 packet network latency tests
-* Compute latency between publisher and VM userspace.
 
 image::images/setup_lat.png[network latency test setup, 490, align=center]
 
@@ -99,26 +61,60 @@ include::include/system_info.adoc[]
 
 <<<
 ==== System Capabilities and Hardening
+
+* Purpose of the tests
+  ** Virtualization
+    *** Check processor support for hardware virtualization technologies (Intel VT-x or AMD-V)
+    *** Ensure hardware virtualization is enabled in UEFI settings
+    *** Verify KVM kernel module is enabled
+  ** Network
+    *** Ensure network drivers are operational
+    *** Verify SEAPATH's network infrastructure tools, such as OpenVSwitch, are operational
+  ** Clustering
+    *** If the machine is part of a cluster
+  ** Update
+    *** Ensure that the system is upgradable using SWUpdate
+
 include::include/test-cukinia_yoctoCI.xml.adoc[]
 
 <<<
 ==== ANSSI-BP28 Compliance
+
 include::include/test-yoctoCI-ANSSI-BP28-M-Recommendations.csv.adoc[]
 include::include/test-yoctoCI-ANSSI-BP28-MI-Recommendations.csv.adoc[]
 include::include/test-yoctoCI-ANSSI-BP28-MIE-Recommendations.csv.adoc[]
 
+For more information, please refer to https://lf-energy.atlassian.net/wiki/x/O4TlAQ[LF Energy wiki page].
+
 <<<
-==== Virtual Machine Deployment
+==== Virtual Machine (VM) Deployment
+
+* Purpose of the tests 
+  ** Deploy and test two VMs
+    *** One real-time and isolated
+    *** One non-real-time and non-isolated
+  ** Use VMs for
+    *** Real-time (cyclic test)
+    *** SV IEC61850 packet network latency tests
+
 include::include/test-cukinia_guest0.xml.adoc[]
 include::include/test-cukinia_guest1.xml.adoc[]
 
 <<<
 ==== Real-time testing (Cyclictest)
+* Purpose of the test
+  ** Employ Cyclictest to measure real-time system latency
+    *** Run on isolated CPUs
+    *** Determine worst-case latencies
+
 The following command is launched:
 [,bash]
 ----
 cyclictest -l10000 -m -Sp90 -i200 -h400 -q
 ----
+
+For more information, please refer to https://lf-energy.atlassian.net/wiki/x/QoTlAQ[LF Energy wiki page].
+
 ===== Hypervisor
 image::cyclictest_results_hyp.png[]
 include::include/cyclictest_hyp.adoc[]
@@ -131,6 +127,10 @@ include::include/cyclictest_vm.adoc[opts=optional]
 
 <<<
 ==== IEC61850 Sampled Value Latency Testing
+* Purpose of the test
+  ** Perform SV IEC61850 packet network latency tests
+  ** Compute latency between publisher and VM userspace.
+
 include::include/latency_tests.adoc[]
 
 <<<
