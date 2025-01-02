@@ -32,8 +32,8 @@
 == List of supported equipment
 [.center]
 
-* SFL
-** <<SEAPATH CI>>
+* Welotec
+** <<RSAPC Mk2>>
 
 <<<
 == Introduction
@@ -92,8 +92,8 @@ A series of tests has been carried out on a range of equipment from several vend
 image::images/setup_lat.png[network latency test setup, 490, align=center]
 
 <<<
-== SFL
-=== SEAPATH CI
+== Welotec
+=== RSAPC Mk2
 ==== Setup Information
 include::include/system_info.adoc[]
 
