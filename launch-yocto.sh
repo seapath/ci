@@ -269,9 +269,7 @@ test_latency() {
 
   # Move report and images to the test report directory
   cp "${WORK_DIR}/ansible/ci_latency_tests/results/latency_tests.adoc" "${WORK_DIR}/ci/openlab/include/"
-  for img in "${WORK_DIR}/ansible/ci_latency_tests/results/histogram*guest*.png"; do
-	  mv $img "${WORK_DIR}/ci/openlab/doc/"
-  done
+  mv ${WORK_DIR}/ansible/ci_latency_tests/results/histogram*guest*.png ${WORK_DIR}/ci/openlab/doc/
 }
 
 # Generate the test report and upload it
