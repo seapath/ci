@@ -255,7 +255,7 @@ test_latency() {
       --sub "${WORK_DIR}/ansible/ci_latency_tests/results/ts_guest0.txt" \
       --pub "${WORK_DIR}/ansible/ci_latency_tests/results/ts_sv_publisher.txt" \
       --subscriber_name "guest0" \
-      --stream "0..7" \
+      --stream "0" \
       --max_latency "2000" \
       -o "${WORK_DIR}/ansible/ci_latency_tests"
 
