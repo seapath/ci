@@ -256,7 +256,7 @@ test_latency() {
       --pub "${WORK_DIR}/ansible/ci_latency_tests/results/ts_sv_publisher.txt" \
       --subscriber_name "guest0" \
       --stream "0" \
-      --max_latency "2000" \
+      --max_latency "250" \
       -o "${WORK_DIR}/ansible/ci_latency_tests"
 
   # Check if latency tests passed
