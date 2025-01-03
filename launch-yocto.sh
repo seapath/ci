@@ -257,6 +257,7 @@ test_latency() {
       --subscriber_name "guest0" \
       --stream "0" \
       --max_latency "250" \
+      --display_max_latency \
       -o "${WORK_DIR}/ansible/ci_latency_tests"
 
   # Check if latency tests passed
