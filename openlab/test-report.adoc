@@ -121,6 +121,7 @@ include::include/cyclictest_vm.adoc[opts=optional]
   ** Compute latency between publisher and VM userspace.
 
 * Number of sent IEC61850 Sampled Values streams: 8
+* Test duration: @@TEST_DURATION@@
 
 include::include/latency_tests.adoc[]
 
