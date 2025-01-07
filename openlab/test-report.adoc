@@ -78,7 +78,7 @@ For more information, please refer to https://lf-energy.atlassian.net/wiki/x/O4T
 <<<
 ==== Virtual Machine (VM) Deployment
 
-* Purpose of the tests 
+* Purpose of the tests
   ** Deploy and test two VMs
     *** One real-time and isolated
     *** One non-real-time and non-isolated
@@ -119,6 +119,8 @@ include::include/cyclictest_vm.adoc[opts=optional]
 * Purpose of the test
   ** Perform SV IEC61850 packet network latency tests
   ** Compute latency between publisher and VM userspace.
+
+* Number of sent IEC61850 Sampled Values streams: 8
 
 include::include/latency_tests.adoc[]
 
