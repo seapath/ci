@@ -115,39 +115,16 @@ launch_system_tests() {
   playbooks/ci_all_machines_tests.yaml
   echo "System tests launched successfully"
 
-  # Generate cyclictest report parts
-  CPU_CORES=$(cat "${WORK_DIR}/ansible/system_info.adoc" | grep "physical CPUs" |  grep -o "[0-9]\+")
-  cd ../ci/openlab
-  mv "${WORK_DIR}/ansible/cyclictest_yoctoCI.txt" .
-  cqfd run scripts/gen_cyclic_test.sh \
-    -i "../cyclictest_yoctoCI.txt" \
-    -o "../doc/cyclictest_results_hyp.png" \
-    -n "${CPU_CORES}" \
-    -l 100
-
-  # Generate test report part
-  INCLUDE_DIR=${WORK_DIR}/ci/openlab/include
-  mkdir "$INCLUDE_DIR"
-  mv "${WORK_DIR}"/ansible/cukinia_*.xml "$INCLUDE_DIR"
-  mv "${WORK_DIR}"/ansible/src/bp28-compliance-matrices/* "$INCLUDE_DIR"
-  mv "${WORK_DIR}"/ansible/system_info.adoc "$INCLUDE_DIR"
-  mv "${WORK_DIR}"/ci/openlab/scripts/cyclictest.adoc "$INCLUDE_DIR/cyclictest_hyp.adoc"
-
   # Check for kernel backtrace error. This is a random error so it must not
   # stop the CI but just display a warning
   # See https://github.com/seapath/ansible/issues/164
-  if grep '<failure' "$INCLUDE_DIR"/*.xml | grep -q '00080'; then
+  if grep '<failure' "${WORK_DIR}/ansible/"*.xml | grep -q '00080'; then
      echo -e "\033[0;33mWarning :\033[0m kernel back trace detected, see \
          https://github.com/seapath/ansible/issues/164"
   fi
 
-  if grep -q "FAILED" "$INCLUDE_DIR/cyclictest_hyp.adoc"; then
-    echo "Test fails, See test report in the section 'Upload test report'"
-    exit 1
-  fi
-
   # Display test results
-  if grep '<failure' "$INCLUDE_DIR"/*.xml | grep -q -v '00080'; then
+  if grep '<failure' "${WORK_DIR}/ansible/"*.xml | grep -q -v '00080'; then
     echo "Test fails, See test report in the section 'Upload test report'"
     exit 1
   else
@@ -187,6 +164,7 @@ test_vms() {
 
   # Generate test report part
   INCLUDE_DIR=${WORK_DIR}/ci/openlab/include
+  mkdir -p "$INCLUDE_DIR"
   mv "${WORK_DIR}"/ansible/cukinia_*.xml "$INCLUDE_DIR"
 
   # Generate cyclictest report part
@@ -276,7 +254,28 @@ test_latency() {
 # Generate the test report and upload it
 generate_report() {
 
-  cd "${WORK_DIR}/ci/openlab"
+  # Generate cyclictest report parts
+  CPU_CORES=$(cat "${WORK_DIR}/ansible/system_info_yoctoCI.adoc" | grep "physical CPUs" |  grep -o "[0-9]\+")
+  cd ${WORK_DIR}/ci/openlab
+  mv "${WORK_DIR}/ansible/cyclictest_yoctoCI.txt" .
+  cqfd run scripts/gen_cyclic_test.sh \
+    -i "../cyclictest_yoctoCI.txt" \
+    -o "../doc/cyclictest_results_hyp.png" \
+    -n "${CPU_CORES}" \
+    -l 100
+
+  # Generate test report part
+  INCLUDE_DIR=${WORK_DIR}/ci/openlab/include
+  mv "${WORK_DIR}"/ansible/cukinia_*.xml "$INCLUDE_DIR"
+  mv "${WORK_DIR}"/ansible/src/bp28-compliance-matrices/* "$INCLUDE_DIR"
+  mv "${WORK_DIR}"/ansible/system_info_*.adoc "$INCLUDE_DIR"
+  mv "${WORK_DIR}"/ci/openlab/scripts/cyclictest.adoc "$INCLUDE_DIR/cyclictest_hyp.adoc"
+
+  if grep -q "FAILED" "$INCLUDE_DIR/cyclictest_hyp.adoc"; then
+    echo "Test fails, See test report in the section 'Upload test report'"
+    exit 1
+  fi
+
   # Replace test-report-pdf default logo by SEAPATH one
   mv "${WORK_DIR}/ci/seapath-themes/logo.png" "themes/sfl.png"
 
