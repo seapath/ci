@@ -39,7 +39,7 @@ if [ -z "${INVENTORY_PUBLISHER}" ]; then
   INVENTORY_PUBLISHER=inventories_private/ci_publisher.yml
 fi
 if [ -z "${ANSIBLE_INVENTORY}" ] ; then
-  ANSIBLE_INVENTORY="inventories_private/ci_yocto_standalone.yaml"
+  ANSIBLE_INVENTORY="inventories_private/ci_yocto_standalone.yaml,inventories_private/ci_yocto_standalone_aaeon.yaml"
 fi
 CQFD_EXTRA_RUN_ARGS="-e ANSIBLE_INVENTORY=${ANSIBLE_INVENTORY}"
 export CQFD_EXTRA_RUN_ARGS
