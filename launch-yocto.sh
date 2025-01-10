@@ -289,14 +289,16 @@ generate_report() {
 
   # Generate Yocto CI tests part
   cqfd -q init
-  if ! CQFD_EXTRA_RUN_ARGS="" cqfd -q run ./report.py \
-          -m -i include \
-          -x include/cukinia_yoctoCI.xml \
-          -c include/ANSSI-BP28-M-Recommendations.csv \
-          -c include/ANSSI-BP28-MI-Recommendations.csv \
-          -c include/ANSSI-BP28-MIE-Recommendations.csv; then
-            die "cqfd error"
-  fi
+  for cukinia_xml in include/cukinia_yoctoCI*.xml; do
+    if ! CQFD_EXTRA_RUN_ARGS="" cqfd -q run ./report.py \
+            -m -i include \
+            -x "$cukinia_xml" \
+            -c include/ANSSI-BP28-M-Recommendations.csv \
+            -c include/ANSSI-BP28-MI-Recommendations.csv \
+            -c include/ANSSI-BP28-MIE-Recommendations.csv; then
+      die "cqfd error"
+    fi
+  done
 
   # Generate VM tests part
   if ! CQFD_EXTRA_RUN_ARGS="" cqfd -q run ./report.py \
