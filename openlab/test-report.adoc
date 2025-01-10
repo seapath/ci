@@ -32,9 +32,13 @@
 == List of supported equipment
 [.center]
 
+=== Virtualization
 * Welotec
 ** <<RSAPC Mk2>>
 
+=== Containerization
+* Aaeon
+** <<ARM I.MX8P-2G>>
 <<<
 == Introduction
 The purpose of this document is to certify the correct operation of the open source real-time operating system for virtualizing IEDs: SEAPATH, a project under the governance of the Linux Foundation Energy.
@@ -46,7 +50,7 @@ A series of tests has been carried out on a range of equipment from several vend
 == Welotec
 === RSAPC Mk2
 ==== Setup Information
-include::include/system_info.adoc[]
+include::include/system_info_yoctoCI.adoc[]
 
 <<<
 ==== System Capabilities and Hardening
@@ -124,6 +128,39 @@ include::include/cyclictest_vm.adoc[opts=optional]
 * Test duration: @@TEST_DURATION@@
 
 include::include/latency_tests.adoc[]
+
+<<<
+== Aaeon
+=== ARM I.MX8P-2G
+==== Setup Information
+include::include/system_info_yoctoCI-aaeon.adoc[]
+
+<<<
+==== System Capabilities and Hardening
+
+include::include/test-cukinia_yoctoCI-aaeon.xml.adoc[]
+
+<<<
+==== ANSSI-BP28 Compliance
+
+include::include/test-yoctoCI-aaeon-ANSSI-BP28-M-Recommendations.csv.adoc[]
+include::include/test-yoctoCI-aaeon-ANSSI-BP28-MI-Recommendations.csv.adoc[]
+include::include/test-yoctoCI-aaeon-ANSSI-BP28-MIE-Recommendations.csv.adoc[]
+
+For more information, please refer to https://lf-energy.atlassian.net/wiki/x/O4TlAQ[LF Energy wiki page].
+
+<<<
+===== Container
+====== CONTAINER_NAME
+==== IEC61850 Sampled Value Latency Testing
+* Purpose of the test
+  ** Perform SV IEC61850 packet network latency tests
+  ** Compute latency between publisher and container NIC.
+
+* Number of sent IEC61850 Sampled Values streams: 8
+* Test duration: @@TEST_DURATION@@
+
+// include::include/latency_tests.adoc[]
 
 <<<
 == About this documentation
