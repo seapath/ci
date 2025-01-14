@@ -143,6 +143,7 @@ deploy_vms() {
 
   cd ansible
   cqfd run ansible-playbook \
+  --limit '!yoctoCI-aaeon' \
   playbooks/ci_vms_standalone_ptp.yaml
   echo "test VMs deployed successfully"
 }
