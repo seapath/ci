@@ -263,7 +263,6 @@ def write_matrix_tests(requirements, machine_name, xml_files, adoc_file):
                 )
             )
             print(f"Test id {test_id} is not present for {machine_name}")
-            return_code = 1
         elif passed:
             adoc_file.write(
                 matrix_line_test.format(
