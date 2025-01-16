@@ -166,7 +166,7 @@ test_vms() {
   # Generate test report part
   INCLUDE_DIR=${WORK_DIR}/ci/openlab/include
   mkdir -p "$INCLUDE_DIR"
-  mv "${WORK_DIR}"/ansible/cukinia_*.xml "$INCLUDE_DIR"
+  mv "${WORK_DIR}"/ansible/cukinia_guest*.xml "$INCLUDE_DIR"
 
   # Generate cyclictest report part
   cd ../ci/openlab
