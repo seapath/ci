@@ -206,18 +206,22 @@ test_latency() {
   # Build sv_timestamp_logger
   git clone --recurse-submodules -q "https://${SEAPATH_BASE_REPO}/sv_timestamp_logger" ${WORK_DIR}/sv_timestamp_logger
   cd ${WORK_DIR}/sv_timestamp_logger
-  docker build . --tag sv_timestamp_logger -f Dockerfile
-  docker image save -o sv_timestamp_logger.tar sv_timestamp_logger
+
+  docker build . --platform linux/amd64 --tag sv_timestamp_logger -f Dockerfile
+  docker image save -o sv_timestamp_logger_amd64.tar sv_timestamp_logger
+  docker build . --platform linux/arm64 --tag sv_timestamp_logger -f Dockerfile
+  docker image save -o sv_timestamp_logger_arm64.tar sv_timestamp_logger
+
   if [ ! -e  "${WORK_DIR}/ansible/ci_latency_tests/build/" ]; then
       mkdir "${WORK_DIR}/ansible/ci_latency_tests/build/"
   fi
-  mv sv_timestamp_logger.tar ${WORK_DIR}/ansible/ci_latency_tests/build/
+  mv sv_timestamp_logger_*.tar ${WORK_DIR}/ansible/ci_latency_tests/build/
   echo "sv_timestamp_logger built succesfully"
 
   # Call playbook
   cd ${WORK_DIR}/ansible
   cqfd run ansible-playbook \
-  --limit "yoctoCI,guest0,sv_publisher" \
+  --limit "yoctoCI,yoctoCI-aaeon,guest0,sv_publisher" \
   playbooks/ci_latency_tests.yaml \
   -e "pcap=${PCAP}" \
   -e "pcap_loop=${PCAP_LOOP}"
@@ -237,10 +241,20 @@ test_latency() {
       --stream "0" \
       --max_latency "250" \
       --display_max_latency \
-      -o "${WORK_DIR}/ansible/ci_latency_tests"
+      -o "${WORK_DIR}/ansible/ci_latency_tests_yoctoCI"
+
+  cqfd -d "${sv_timestamp_path}/.cqfd" -f "${sv_timestamp_path}/.cqfdrc" run \
+    python3 ${sv_timestamp_path}/sv_timestamp_analysis.py \
+      --sub "${WORK_DIR}/ansible/ci_latency_tests/results/ts_yoctoCI-aaeon.txt" \
+      --pub "${WORK_DIR}/ansible/ci_latency_tests/results/ts_sv_publisher.txt" \
+      --subscriber_name "yoctoCI-aaeon" \
+      --stream "0" \
+      --max_latency "10000" \
+      --display_max_latency \
+      -o "${WORK_DIR}/ansible/ci_latency_tests_yoctoCI"
 
   # Check if latency tests passed
-  if grep -q "FAILED" "${WORK_DIR}/ansible/ci_latency_tests/results/latency_tests.adoc"; then
+  if grep -q "FAILED" ${WORK_DIR}/ansible/ci_latency_tests/results/latency_tests_*.adoc; then
     echo "Test fails, See test report in the section 'Upload test report'"
     exit 1
   else
@@ -248,8 +262,9 @@ test_latency() {
   fi
 
   # Move report and images to the test report directory
-  cp "${WORK_DIR}/ansible/ci_latency_tests/results/latency_tests.adoc" "${WORK_DIR}/ci/openlab/include/"
-  mv ${WORK_DIR}/ansible/ci_latency_tests/results/histogram*guest*.png ${WORK_DIR}/ci/openlab/doc/
+  cp ${WORK_DIR}/ansible/ci_latency_tests_yoctoCI/results/latency_tests.adoc "${WORK_DIR}/ci/openlab/include/latency_tests_yoctoCI.adoc"
+  cp ${WORK_DIR}/ansible/ci_latency_tests_yoctoCI-aaeon/results/latency_tests.adoc "${WORK_DIR}/ci/openlab/include/latency_tests_yoctoCI-aaeon.adoc"
+  mv ${WORK_DIR}/ansible/ci_latency_tests/results/histogram*.png ${WORK_DIR}/ci/openlab/doc/
 }
 
 # Generate the test report and upload it
