@@ -128,7 +128,7 @@ include::include/cyclictest_vm.adoc[opts=optional]
 * Number of sent IEC61850 Sampled Values streams: 8
 * Test duration: @@TEST_DURATION@@
 
-include::include/latency_tests.adoc[]
+include::include/latency_tests_yoctoCI.adoc[]
 
 <<<
 == Aaeon
@@ -161,7 +161,10 @@ For more information, please refer to https://lf-energy.atlassian.net/wiki/x/O4T
 * Number of sent IEC61850 Sampled Values streams: 8
 * Test duration: @@TEST_DURATION@@
 
-// include::include/latency_tests.adoc[]
+The latency tests for the Aaeon board are purely informative.
+As the Linux kernel used is not RT, high latencies are expected.
+
+include::include/latency_tests_yoctoCI-aaeon.adoc[]
 
 <<<
 == About this documentation
