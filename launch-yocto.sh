@@ -251,10 +251,10 @@ test_latency() {
       --stream "0" \
       --max_latency "10000" \
       --display_max_latency \
-      -o "${WORK_DIR}/ansible/ci_latency_tests_yoctoCI"
+      -o "${WORK_DIR}/ansible/ci_latency_tests_yoctoCI-aaeon"
 
   # Check if latency tests passed
-  if grep -q "FAILED" ${WORK_DIR}/ansible/ci_latency_tests/results/latency_tests_*.adoc; then
+  if grep -q "FAILED" ${WORK_DIR}/ansible/ci_latency_tests_*/results/latency_tests.adoc; then
     echo "Test fails, See test report in the section 'Upload test report'"
     exit 1
   else
@@ -264,7 +264,7 @@ test_latency() {
   # Move report and images to the test report directory
   cp ${WORK_DIR}/ansible/ci_latency_tests_yoctoCI/results/latency_tests.adoc "${WORK_DIR}/ci/openlab/include/latency_tests_yoctoCI.adoc"
   cp ${WORK_DIR}/ansible/ci_latency_tests_yoctoCI-aaeon/results/latency_tests.adoc "${WORK_DIR}/ci/openlab/include/latency_tests_yoctoCI-aaeon.adoc"
-  mv ${WORK_DIR}/ansible/ci_latency_tests/results/histogram*.png ${WORK_DIR}/ci/openlab/doc/
+  mv ${WORK_DIR}/ansible/ci_latency_tests_*/results/histogram*.png ${WORK_DIR}/ci/openlab/doc/
 }
 
 # Generate the test report and upload it
