@@ -10,7 +10,7 @@ import csv
 
 GREEN_COLOR = "#90EE90"
 RED_COLOR = "#F08080"
-ORANGE_COLOR = "#ee6644"
+ORANGE_COLOR = "#F0B880"
 
 
 class CukiniaTest(TestCase):
