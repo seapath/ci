@@ -113,7 +113,6 @@ configure_debian() {
   cd ansible
   cqfd run ansible-playbook \
   --key-file "${PRIVATE_KEYFILE_PATH}" \
-  --skip-tags "package-install" \
   --limit 'all:!ci-tool' \
   playbooks/ci_configure.yaml
   echo "Debian set up succesfully"
@@ -125,7 +124,6 @@ launch_system_tests() {
   cd ansible
   cqfd run ansible-playbook \
   --key-file "${PRIVATE_KEYFILE_PATH}" \
-  --skip-tags "package-install" \
   --limit 'all:!ci-tool' \
   playbooks/ci_test.yaml
   echo "System tests launched successfully"
@@ -201,7 +199,6 @@ launch_latency_tests() {
   cd ansible
   cqfd run ansible-playbook \
   --key-file "${PRIVATE_KEYFILE_PATH}" \
-  --skip-tags "package-install" \
   playbooks/test_run_latency_tests.yaml
 
   # Generate latency report part
