@@ -101,7 +101,6 @@ initialization() {
 configure_seapath() {
   cd ansible
   cqfd run ansible-playbook \
-  --skip-tags "package-install" \
   playbooks/ci_standalone_setup.yaml
   echo "SEAPATH set up succesfully"
 }
