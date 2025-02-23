@@ -155,17 +155,36 @@ launch_system_tests() {
 # Deploy a Virtual machine on the cluster and launch cukinia tests in it.
 # Fetch results
 launch_vm_tests() {
+  cd ansible
+
   # Add VM inventory file
   # This file cannot be added at the beginnig of launch.sh cause it is used
   # only during thes step
-  ANSIBLE_INVENTORY="${ANSIBLE_INVENTORY},${INVENTORY_VM}"
-  CQFD_EXTRA_RUN_ARGS="${CQFD_EXTRA_RUN_ARGS} -e ANSIBLE_INVENTORY=${ANSIBLE_INVENTORY} -v /etc/seapath-ci/vm_file:${WORK_DIR}/ansible/vm_images"
-
-  cd ansible
+  ANSIBLE_INVENTORY_VM="${ANSIBLE_INVENTORY},${INVENTORY_VM_CLUSTER}"
+  CQFD_EXTRA_RUN_ARGS="${CQFD_EXTRA_RUN_ARGS} -e ANSIBLE_INVENTORY=${ANSIBLE_INVENTORY_VM} -v /etc/seapath-ci/vm_file:${WORK_DIR}/ansible/vm_images"
   cqfd run ansible-playbook \
   --key-file "${PRIVATE_KEYFILE_PATH}" \
   playbooks/deploy_vms_cluster.yaml
-  echo "test VM deployed successfully"
+  echo "test VM deployed successfully on cluster"
+
+  cqfd run ansible-playbook \
+  --key-file "${PRIVATE_KEYFILE_PATH}" \
+  --limit VMs \
+  playbooks/seapath_setup_prerequisdebian.yaml \
+  playbooks/seapath_setup_hardened_debian.yaml \
+  playbooks/ci_prepare_VMs.yaml
+
+  cqfd run ansible-playbook \
+  --key-file "${PRIVATE_KEYFILE_PATH}" \
+  --limit VMs \
+  playbooks/ci_test.yaml
+
+  ANSIBLE_INVENTORY_VM="${ANSIBLE_INVENTORY},${INVENTORY_VM_STANDALONE}"
+  CQFD_EXTRA_RUN_ARGS="${CQFD_EXTRA_RUN_ARGS} -e ANSIBLE_INVENTORY=${ANSIBLE_INVENTORY_VM} -v /etc/seapath-ci/vm_file:${WORK_DIR}/ansible/vm_images"
+  cqfd run ansible-playbook \
+  --key-file "${PRIVATE_KEYFILE_PATH}" \
+  playbooks/deploy_vms_standalone.yaml
+  echo "test VM deployed successfully on standalone"
 
   cqfd run ansible-playbook \
   --key-file "${PRIVATE_KEYFILE_PATH}" \
@@ -182,6 +201,7 @@ launch_vm_tests() {
   # Move VM test results to test-report-pdf
   INCLUDE_DIR=${WORK_DIR}/ci/test-report-pdf/include
   mv ${WORK_DIR}/ansible/cukinia_*.xml $INCLUDE_DIR # Test files
+
 
   # Display test results
   if grep '<failure' $INCLUDE_DIR/*.xml | grep -q -v '00080'; then
