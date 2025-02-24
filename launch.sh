@@ -144,6 +144,7 @@ launch_system_tests() {
 
   # Display test results
   if grep '<failure' $INCLUDE_DIR/*.xml | grep -q -v '00080'; then
+    grep FAIL $INCLUDE_DIR/*.xml || true
     echo "Test fails, See test report in the section 'Upload test report'"
     exit 1
   else
@@ -205,6 +206,7 @@ launch_vm_tests() {
 
   # Display test results
   if grep '<failure' $INCLUDE_DIR/*.xml | grep -q -v '00080'; then
+    grep FAIL $INCLUDE_DIR/*.xml || true
     echo "Test fails, See test report in the section 'Upload test report'"
     exit 1
   else
@@ -263,7 +265,7 @@ generate_report() {
     die "cqfd error"
   fi
   echo "Test report generated successfully"
-
+ 
   # Upload report
   PR_N=$(echo "$GITHUB_REF" | cut -d '/' -f 3)
   TIME=$(date +%F_%Hh%Mm%S)
