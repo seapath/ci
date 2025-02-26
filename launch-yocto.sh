@@ -86,7 +86,7 @@ initialization() {
   echo "Pull request sources got succesfully"
 
   # Get inventories
-  git clone -q "${PRIVATE_INVENTORIES_REPO_URL}" inventories_private
+  git clone "${PRIVATE_INVENTORIES_REPO_URL}" -b seapath-benchmark inventories_private
 
   # Prepare ansible repository
   cqfd init
@@ -146,6 +146,36 @@ deploy_vms() {
   playbooks/ci_vms_standalone_ptp.yaml
   echo "test VMs deployed successfully"
 }
+
+configure_seapath_benchmark() {
+  git clone -b sfl-dev https://github.com/seapath/seapath-benchmark
+  cd seapath-benchmark
+  git clone "${PRIVATE_INVENTORIES_REPO_URL}" -b seapath-benchmark inventories_private
+  cqfd init
+  cqfd run ansible-playbook -i ${INVENTORY_SEAPATH_BENCHMARK} playbooks/configure_test_profiles.yaml
+}
+
+run_benchmark_weekly() {
+  # This function runs seapath-benchmark with long benchmark tests:
+  # - rttest (cyclictest reference test)
+  # - cpu (sysbench CPU reference test)
+  cd seapath-benchmark
+  cqfd run ansible-playbook -i ${INVENTORY_SEAPATH_BENCHMARK} playbooks/run_test_profiles.yaml -e test_scenario_name=rttest
+  TEST_REPORT_PATH="$(basename tests_results-*)"
+
+  VM1_RTTEST_REPORT_PATH="$(ls $TEST_REPORT_PATH/VM1*)"
+  VM2_RTTEST_REPORT_PATH="$(ls $TEST_REPORT_PATH/VM2*)"
+
+  mv $VM1_RTTEST_REPORT_PATH $TEST_REPORT_PATH/CI_VM1_rt_rttest_reference_test.pdf
+  mv $VM2_RTTEST_REPORT_PATH $TEST_REPORT_PATH/CI_VM2_rt_rttest_reference_test.pdf
+
+  VM1_RTTEST_REPORT_PATH=$TEST_REPORT_PATH/CI_VM1_rt_rttest_reference_test.pdf
+  VM2_RTTEST_REPORT_PATH=$TEST_REPORT_PATH/CI_VM2_rt_rttest_reference_test.pdf
+
+  rclone copy $VM1_RTTEST_REPORT_PATH SEAPATH_CI:ci_test_report
+  rclone copy $VM2_RTTEST_REPORT_PATH SEAPATH_CI:ci_test_report
+}
+
 
 # Prepare and launch cukinia tests for VMs
 # Send the result of the tests as return code
@@ -228,7 +258,7 @@ test_latency() {
 
   # Analyse SV timestamps with sv_timestamp_analysis
   sv_timestamp_path="${WORK_DIR}/ansible/ci_latency_tests/sv-timestamp-analysis"
-  
+
   git clone -q "https://${SEAPATH_BASE_REPO}/sv-timestamp-analysis" ${sv_timestamp_path}
   cqfd -d "${sv_timestamp_path}/.cqfd" -f "${sv_timestamp_path}/.cqfdrc" init
 
@@ -391,6 +421,14 @@ case "$1" in
     ;;
   test_latency)
     test_latency
+    exit 0
+    ;;
+  configure_seapath_benchmark)
+    configure_seapath_benchmark
+    exit 0
+    ;;
+  run_benchmark_weekly)
+    run_benchmark_weekly
     exit 0
     ;;
   report)
