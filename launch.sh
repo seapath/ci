@@ -246,6 +246,31 @@ launch_latency_tests() {
   # TODO : Add return value : false if we exceed max latency
 }
 
+run_benchmark_weekly() {
+  # This function configures and runs seapath-benchmark with long benchmark tests:
+  # - rttest (cyclictest reference test)
+
+  git clone https://github.com/seapath/seapath-benchmark
+  cd seapath-benchmark
+  git clone "${PRIVATE_INVENTORIES_REPO_URL}" inventories_private
+  cqfd init
+  cqfd run ansible-playbook -i ${INVENTORY_VM} playbooks/configure_test_profiles.yaml
+  cqfd run ansible-playbook -i ${INVENTORY_VM} playbooks/run_test_profiles.yaml -e test_scenario_name=rttest
+  TEST_REPORT_PATH="$(basename tests_results-*)"
+
+  VM1_RTTEST_REPORT_PATH="$(ls $TEST_REPORT_PATH/vmtest13*)"
+  VM2_RTTEST_REPORT_PATH="$(ls $TEST_REPORT_PATH/vmtest13rt*)"
+
+  mv $VM1_RTTEST_REPORT_PATH $TEST_REPORT_PATH/CI_debian_VM1_rt_rttest_reference_test.pdf
+  mv $VM2_RTTEST_REPORT_PATH $TEST_REPORT_PATH/CI_debian_VM2_rt_rttest_reference_test.pdf
+
+  VM1_RTTEST_REPORT_PATH=$TEST_REPORT_PATH/CI_debian_VM1_rt_rttest_reference_test.pdf
+  VM2_RTTEST_REPORT_PATH=$TEST_REPORT_PATH/CI_debian_VM2_rt_rttest_reference_test.pdf
+
+  rclone copy $VM1_RTTEST_REPORT_PATH SEAPATH_CI:ci_test_report
+  rclone copy $VM2_RTTEST_REPORT_PATH SEAPATH_CI:ci_test_report
+}
+
 # Generate the test report and upload it
 generate_report() {
 
@@ -265,7 +290,7 @@ generate_report() {
     die "cqfd error"
   fi
   echo "Test report generated successfully"
- 
+
   # Upload report
   PR_N=$(echo "$GITHUB_REF" | cut -d '/' -f 3)
   TIME=$(date +%F_%Hh%Mm%S)
@@ -320,6 +345,10 @@ case "$1" in
     ;;
   latency)
     launch_latency_tests
+    exit 0
+    ;;
+  run_benchmark_weekly)
+    run_benchmark_weekly
     exit 0
     ;;
   report)
