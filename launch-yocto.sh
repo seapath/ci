@@ -159,8 +159,8 @@ run_benchmark_weekly() {
   cqfd run ansible-playbook -i ${INVENTORY_VM} playbooks/run_test_profiles.yaml -e test_scenario_name=rttest
   TEST_REPORT_PATH="$(basename tests_results-*)"
 
-  VM1_RTTEST_REPORT_PATH="$(ls $TEST_REPORT_PATH/VM1*)"
-  VM2_RTTEST_REPORT_PATH="$(ls $TEST_REPORT_PATH/VM2*)"
+  VM1_RTTEST_REPORT_PATH="$(ls $TEST_REPORT_PATH/guest0*)"
+  VM2_RTTEST_REPORT_PATH="$(ls $TEST_REPORT_PATH/guest1*)"
 
   mv $VM1_RTTEST_REPORT_PATH $TEST_REPORT_PATH/CI_VM1_rt_rttest_reference_test.pdf
   mv $VM2_RTTEST_REPORT_PATH $TEST_REPORT_PATH/CI_VM2_rt_rttest_reference_test.pdf
@@ -254,7 +254,7 @@ test_latency() {
 
   # Analyse SV timestamps with sv_timestamp_analysis
   sv_timestamp_path="${WORK_DIR}/ansible/ci_latency_tests/sv-timestamp-analysis"
-  
+
   git clone -q "https://${SEAPATH_BASE_REPO}/sv-timestamp-analysis" ${sv_timestamp_path}
   cqfd -d "${sv_timestamp_path}/.cqfd" -f "${sv_timestamp_path}/.cqfdrc" init
 
