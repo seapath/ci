@@ -49,7 +49,7 @@ if [ -z "${PCAP_LOOP}" ] ; then
 fi
 
 if [ -z "${PCAP}" ] ; then
-	PCAP="8_streams_4000_SV.pcap"
+	PCAP="/seapath-ci/pcaps/8_streams_4000_SV.pcap"
 fi
 
 # Standard help message
@@ -102,6 +102,8 @@ configure_seapath() {
   cd ansible
   cqfd run ansible-playbook \
   playbooks/ci_standalone_setup.yaml
+  cqfd run ansible-playbook \
+  playbooks/ci_prepare_publisher.yaml
   echo "SEAPATH set up succesfully"
 }
 
@@ -221,77 +223,32 @@ test_vms() {
 
 # Prepare and launch latency tests
 test_latency() {
-
-  # Add inventory files
-  # This file cannot be added at the beginning of launch-yocto.sh because it is
-  # used only during these steps
-  ANSIBLE_INVENTORY="${ANSIBLE_INVENTORY},${INVENTORY_VM},${INVENTORY_PUBLISHER}"
-  CQFD_EXTRA_RUN_ARGS="${CQFD_EXTRA_RUN_ARGS} -e ANSIBLE_INVENTORY=${ANSIBLE_INVENTORY}"
-
-  # Build sv_timestamp_logger
-  git clone --recurse-submodules -q "https://${SEAPATH_BASE_REPO}/sv_timestamp_logger" ${WORK_DIR}/sv_timestamp_logger
-  cd ${WORK_DIR}/sv_timestamp_logger
-
-  docker build . --platform linux/amd64 --tag sv_timestamp_logger -f Dockerfile
-  docker image save -o sv_timestamp_logger_amd64.tar sv_timestamp_logger
-  docker build . --platform linux/arm64 --tag sv_timestamp_logger -f Dockerfile
-  docker image save -o sv_timestamp_logger_arm64.tar sv_timestamp_logger
-
-  if [ ! -e  "${WORK_DIR}/ansible/ci_latency_tests/build/" ]; then
-      mkdir "${WORK_DIR}/ansible/ci_latency_tests/build/"
-  fi
-  mv sv_timestamp_logger_*.tar ${WORK_DIR}/ansible/ci_latency_tests/build/
-  echo "sv_timestamp_logger built succesfully"
-
-  # Call playbook
-  cd ${WORK_DIR}/ansible
+  CQFD_EXTRA_RUN_ARGS="${CQFD_EXTRA_RUN_ARGS} -v /var/run/docker.sock:/var/run/docker.sock"
+  git clone --branch=v1.0 https://github.com/seapath/svtrace-ansible
+  cd svtrace-ansible
+  git clone -b main "${PRIVATE_INVENTORIES_REPO_URL}" inventories_private
+  cqfd init
   cqfd run ansible-playbook \
-  --limit "yoctoCI,guest0,sv_publisher" \
-  playbooks/ci_latency_tests.yaml \
+  --limit "localhost,sv_publisher,guest0" \
+  playbooks/configure_latency_tests.yaml \
+  -i ${INVENTORY_VM} \
+  -i ${INVENTORY_PUBLISHER} \
+
+  cqfd run ansible-playbook \
+  --limit "localhost,sv_publisher,guest0" \
+  playbooks/run_latency_tests.yaml \
+  -i ${INVENTORY_VM} \
+  -i ${INVENTORY_PUBLISHER} \
   -e "pcap=${PCAP}" \
-  -e "pcap_loop=${PCAP_LOOP}"
-  echo "Latency tests launched succesfully"
+  -e "pcap_cycles=${PCAP_LOOP}" \
+  -e "stream_to_log="0000"" \
 
-  # Analyse SV timestamps with sv_timestamp_analysis
 
-  # Use relative path from ansible directory as cqfd currently doesn't support
-  # absolute paths for -d option
-  sv_timestamp_path="ci_latency_tests/sv-timestamp-analysis"
-
-  git clone -q "https://${SEAPATH_BASE_REPO}/sv-timestamp-analysis" ${sv_timestamp_path}
-  cqfd -d "${sv_timestamp_path}/.cqfd" -f "${sv_timestamp_path}/.cqfdrc" init
-
-  cqfd -d "${sv_timestamp_path}/.cqfd" -f "${sv_timestamp_path}/.cqfdrc" run \
-    python3 ${sv_timestamp_path}/sv_timestamp_analysis.py \
-      --sub "${WORK_DIR}/ansible/ci_latency_tests/results/ts_guest0.txt" \
-      --pub "${WORK_DIR}/ansible/ci_latency_tests/results/ts_sv_publisher.txt" \
-      --subscriber_name "guest0" \
-      --stream "0" \
-      --max_latency "250" \
-      --display_max_latency \
-      -o "${WORK_DIR}/ansible/ci_latency_tests_yoctoCI"
-
-  # The AAEON board is currently not configured for realtime scheduling,
-  # therefore it can happen that very high latencies (> 0.5s) occur.
-  # Until realtime configuration is done, the max_latency threshold
-  # is set to a very high value (1s) so that this test cannot fail the whole CI.
-  #cqfd -d "${sv_timestamp_path}/.cqfd" -f "${sv_timestamp_path}/.cqfdrc" run \
-  #  python3 ${sv_timestamp_path}/sv_timestamp_analysis.py \
-  #    --sub "${WORK_DIR}/ansible/ci_latency_tests/results/ts_yoctoCI-aaeon.txt" \
-  #    --pub "${WORK_DIR}/ansible/ci_latency_tests/results/ts_sv_publisher.txt" \
-  #    --subscriber_name "yoctoCI-aaeon" \
-  #    --stream "0" \
-  #    --max_latency "1000000" \
-  #    --display_max_latency \
-  #    -o "${WORK_DIR}/ansible/ci_latency_tests_yoctoCI-aaeon"
-
-  # Move report and images to the test report directory
-  cp ${WORK_DIR}/ansible/ci_latency_tests_yoctoCI/results/latency_tests.adoc "${WORK_DIR}/ci/openlab/include/latency_tests_yoctoCI.adoc"
-  #cp ${WORK_DIR}/ansible/ci_latency_tests_yoctoCI-aaeon/results/latency_tests.adoc "${WORK_DIR}/ci/openlab/include/latency_tests_yoctoCI-aaeon.adoc"
-  mv ${WORK_DIR}/ansible/ci_latency_tests_*/results/histogram*.png ${WORK_DIR}/ci/openlab/doc/
+  cp ${WORK_DIR}/svtrace-ansible/tests_results/data/ci_latency_tests_guest0/results/latency_tests.adoc "${WORK_DIR}/ci/openlab/include/latency_tests_yoctoCI.adoc"
+  mv ${WORK_DIR}/svtrace-ansible/tests_results/data/ci_latency_tests_guest0/results/histogram*.png ${WORK_DIR}/ci/openlab/doc/
 
   # Check if latency tests passed
-  if grep -q "FAILED" ${WORK_DIR}/ansible/ci_latency_tests_*/results/latency_tests.adoc; then
+  if grep -q "FAILED" ${WORK_DIR}/ci/openlab/include/latency_tests_*.adoc; then
     echo "Test fails, See test report in the section 'Upload test report'"
     exit 1
   else
