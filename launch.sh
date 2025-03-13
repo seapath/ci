@@ -132,7 +132,7 @@ launch_system_tests() {
   INCLUDE_DIR=${WORK_DIR}/ci/test-report-pdf/include
   mkdir "$INCLUDE_DIR"
   mv ${WORK_DIR}/ansible/cukinia_*.xml $INCLUDE_DIR # Test files
-  cp ${WORK_DIR}/ansible/roles/deploy_cukinia_tests/cukinia-tests/*.csv $INCLUDE_DIR # Compliance matrix
+  cp ${WORK_DIR}/ansible/roles/debian_tests/cukinia-tests/*.csv $INCLUDE_DIR # Compliance matrix
 
   # Check for kernel backtrace error. This is a random error so it must not
   # stop the CI but just display a warning
