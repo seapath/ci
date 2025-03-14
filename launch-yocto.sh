@@ -253,7 +253,10 @@ test_latency() {
   echo "Latency tests launched succesfully"
 
   # Analyse SV timestamps with sv_timestamp_analysis
-  sv_timestamp_path="${WORK_DIR}/ansible/ci_latency_tests/sv-timestamp-analysis"
+
+  # Use relative path from ansible directory as cqfd currently doesn't support
+  # absolute paths for -d option
+  sv_timestamp_path="ci_latency_tests/sv-timestamp-analysis"
 
   git clone -q "https://${SEAPATH_BASE_REPO}/sv-timestamp-analysis" ${sv_timestamp_path}
   cqfd -d "${sv_timestamp_path}/.cqfd" -f "${sv_timestamp_path}/.cqfdrc" init
