@@ -151,22 +151,6 @@ include::include/test-yoctoCI-aaeon-ANSSI-BP28-MIE-Recommendations.csv.adoc[]
 For more information, please refer to https://lf-energy.atlassian.net/wiki/x/O4TlAQ[LF Energy wiki page].
 
 <<<
-===== Container
-====== CONTAINER_NAME
-==== IEC61850 Sampled Value Latency Testing
-* Purpose of the test
-  ** Perform SV IEC61850 packet network latency tests
-  ** Compute latency between publisher and container NIC.
-
-* Number of sent IEC61850 Sampled Values streams: 8
-* Test duration: @@TEST_DURATION@@
-
-The latency tests for the Aaeon board are purely informative.
-As the Linux kernel used is not RT, high latencies are expected.
-
-include::include/latency_tests_yoctoCI-aaeon.adoc[]
-
-<<<
 == About this documentation
 
 This documentation uses the AsciiDoc documentation generator. It is a convenient
