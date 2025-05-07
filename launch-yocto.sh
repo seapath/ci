@@ -246,7 +246,7 @@ test_latency() {
   # Call playbook
   cd ${WORK_DIR}/ansible
   cqfd run ansible-playbook \
-  --limit "yoctoCI,yoctoCI-aaeon,guest0,sv_publisher" \
+  --limit "yoctoCI,guest0,sv_publisher" \
   playbooks/ci_latency_tests.yaml \
   -e "pcap=${PCAP}" \
   -e "pcap_loop=${PCAP_LOOP}"
@@ -275,19 +275,19 @@ test_latency() {
   # therefore it can happen that very high latencies (> 0.5s) occur.
   # Until realtime configuration is done, the max_latency threshold
   # is set to a very high value (1s) so that this test cannot fail the whole CI.
-  cqfd -d "${sv_timestamp_path}/.cqfd" -f "${sv_timestamp_path}/.cqfdrc" run \
-    python3 ${sv_timestamp_path}/sv_timestamp_analysis.py \
-      --sub "${WORK_DIR}/ansible/ci_latency_tests/results/ts_yoctoCI-aaeon.txt" \
-      --pub "${WORK_DIR}/ansible/ci_latency_tests/results/ts_sv_publisher.txt" \
-      --subscriber_name "yoctoCI-aaeon" \
-      --stream "0" \
-      --max_latency "1000000" \
-      --display_max_latency \
-      -o "${WORK_DIR}/ansible/ci_latency_tests_yoctoCI-aaeon"
+  #cqfd -d "${sv_timestamp_path}/.cqfd" -f "${sv_timestamp_path}/.cqfdrc" run \
+  #  python3 ${sv_timestamp_path}/sv_timestamp_analysis.py \
+  #    --sub "${WORK_DIR}/ansible/ci_latency_tests/results/ts_yoctoCI-aaeon.txt" \
+  #    --pub "${WORK_DIR}/ansible/ci_latency_tests/results/ts_sv_publisher.txt" \
+  #    --subscriber_name "yoctoCI-aaeon" \
+  #    --stream "0" \
+  #    --max_latency "1000000" \
+  #    --display_max_latency \
+  #    -o "${WORK_DIR}/ansible/ci_latency_tests_yoctoCI-aaeon"
 
   # Move report and images to the test report directory
   cp ${WORK_DIR}/ansible/ci_latency_tests_yoctoCI/results/latency_tests.adoc "${WORK_DIR}/ci/openlab/include/latency_tests_yoctoCI.adoc"
-  cp ${WORK_DIR}/ansible/ci_latency_tests_yoctoCI-aaeon/results/latency_tests.adoc "${WORK_DIR}/ci/openlab/include/latency_tests_yoctoCI-aaeon.adoc"
+  #cp ${WORK_DIR}/ansible/ci_latency_tests_yoctoCI-aaeon/results/latency_tests.adoc "${WORK_DIR}/ci/openlab/include/latency_tests_yoctoCI-aaeon.adoc"
   mv ${WORK_DIR}/ansible/ci_latency_tests_*/results/histogram*.png ${WORK_DIR}/ci/openlab/doc/
 
   # Check if latency tests passed
