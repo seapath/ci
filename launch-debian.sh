@@ -138,7 +138,7 @@ launch_system_tests() {
   # Display test results
   if grep '<failure' $INCLUDE_DIR/*.xml | grep -q -v '00080'; then
     grep FAIL $INCLUDE_DIR/*.xml || true
-    echo "Test fails, See test report in the section 'Upload test report'"
+    echo "Test fails, See associated test report"
     exit 1
   else
     echo "All tests pass"
@@ -200,7 +200,7 @@ launch_vm_tests() {
   # Display test results
   if grep '<failure' $INCLUDE_DIR/*.xml | grep -q -v '00080'; then
     grep FAIL $INCLUDE_DIR/*.xml || true
-    echo "Test fails, See test report in the section 'Upload test report'"
+    echo "Test fails, See associated test report"
     exit 1
   else
     echo "All tests pass"
@@ -208,7 +208,7 @@ launch_vm_tests() {
   fi
 }
 
-# Generate the test report and upload it
+# Generate the test report
 generate_report() {
 
   cd "${WORK_DIR}/ci/test-report-pdf"
@@ -227,40 +227,8 @@ generate_report() {
     die "cqfd error"
   fi
   echo "Test report generated successfully"
- 
-  # Upload report
-  PR_N=$(echo "$GITHUB_REF" | cut -d '/' -f 3)
-  TIME=$(date +%F_%Hh%Mm%S)
-  REPORT_NAME="test-report_${GITHUB_RUN_ID}_${GITHUB_RUN_ATTEMPT}_${TIME}.pdf"
-  REPORT_DIR="${WORK_DIR}/reports/docs/reports/PR-${PR_N}"
-  REPORT_BRANCH="reports-PR${PR_N}"
 
-  # The CI repo have one branch per pull request.
-  # If the report is the first of the PR, the branch needs to be created.
-  # Otherwise, it just have to be switched on.
-  git clone -q --depth 1 -b reports-base-commit \
-    --config core.sshCommand="ssh -i ~/.ssh/ci_rsa" \
-    "${SEAPATH_SSH_BASE_REPO}/ci.git" "$WORK_DIR/reports"
-  cd "$WORK_DIR/reports"
-  if ! git ls-remote origin "$REPORT_BRANCH" | grep -q "$REPORT_BRANCH"; then
-    git branch "$REPORT_BRANCH"
-  else
-    git fetch -q origin "$REPORT_BRANCH":"$REPORT_BRANCH"
-  fi
-  git switch -q "$REPORT_BRANCH"
-
-  mkdir -p "$REPORT_DIR"
-  mv "${WORK_DIR}"/ci/test-report-pdf/test-report.pdf "$REPORT_DIR/$REPORT_NAME"
-  git config --local user.email "ci.seapath@gmail.com"
-  git config --local user.name "Seapath CI"
-  git config --local core.sshCommand "ssh -i ~/.ssh/ci_rsa"
-  git add "$REPORT_DIR/$REPORT_NAME"
-  git commit -q -m "upload report $REPORT_NAME"
-  git push -q origin "$REPORT_BRANCH"
-  echo "Test report uploaded successfully"
-
-  echo See test Report at \
-  "https://${SEAPATH_BASE_REPO}/ci/blob/${REPORT_BRANCH}/docs/reports/PR-${PR_N}/${REPORT_NAME}"
+  mv "${WORK_DIR}"/ci/test-report-pdf/test-report.pdf "${WORK_DIR}"/seapath-test-report.pdf
 }
 
 case "$1" in
