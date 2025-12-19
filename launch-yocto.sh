@@ -126,7 +126,7 @@ launch_system_tests() {
 
   # Display test results
   if grep '<failure' "${WORK_DIR}/ansible/"*.xml | grep -q -v '00080'; then
-    echo "Test fails, See test report in the section 'Upload test report'"
+    echo "Test fails, See associated test report"
     exit 1
   else
     echo "All tests pass"
@@ -207,13 +207,13 @@ test_vms() {
   mv "${WORK_DIR}/ci/openlab/scripts/cyclictest.adoc" "$INCLUDE_DIR/cyclictest_vm.adoc"
 
   if grep -q "FAILED" "$INCLUDE_DIR/cyclictest_vm.adoc"; then
-    echo "Test fails, See test report in the section 'Upload test report'"
+    echo "Test fails, See associated test report"
     exit 1
   fi
 
   # Display test results
   if grep '<failure' "$INCLUDE_DIR"/*.xml | grep -q -v '00080'; then
-    echo "Test fails, See test report in the section 'Upload test report'"
+    echo "Test fails, See associated test report"
     exit 1
   else
     echo "All tests pass"
@@ -249,14 +249,14 @@ test_latency() {
 
   # Check if latency tests passed
   if grep -q "FAILED" ${WORK_DIR}/ci/openlab/include/latency_tests_*.adoc; then
-    echo "Test fails, See test report in the section 'Upload test report'"
+    echo "Test fails, See associated test report"
     exit 1
   else
     echo "All tests pass"
   fi
 }
 
-# Generate the test report and upload it
+# Generate the test report
 generate_report() {
 
   # Generate cyclictest report parts
@@ -277,7 +277,7 @@ generate_report() {
   mv "${WORK_DIR}"/ci/openlab/scripts/cyclictest.adoc "$INCLUDE_DIR/cyclictest_hyp.adoc"
 
   if grep -q "FAILED" "$INCLUDE_DIR/cyclictest_hyp.adoc"; then
-    echo "Test fails, See test report in the section 'Upload test report'"
+    echo "Test fails, See associated test report"
     exit 1
   fi
 
@@ -325,37 +325,7 @@ generate_report() {
   fi
   echo "Test report generated successfully"
 
-  # Upload report
-  PR_N=$(echo "$GITHUB_REF" | cut -d '/' -f 3)
-  TIME=$(date +%F_%Hh%Mm%S)
-  REPORT_NAME="test-report_${GITHUB_RUN_ID}_${GITHUB_RUN_ATTEMPT}_${TIME}.pdf"
-  REPORT_DIR="${WORK_DIR}/reports/docs/reports/PR-${PR_N}"
-  REPORT_BRANCH="reports-PR${PR_N}"
-
-  # The CI repo have one branch per pull request.
-  # If the report is the first of the PR, the branch need to be created.
-  # Otherwise, it just have to be switched on.
-  git clone -q --depth 1 -b reports-base-commit \
-    "${SEAPATH_SSH_BASE_REPO}/ci.git" "$WORK_DIR/reports"
-  cd "$WORK_DIR/reports"
-  if ! git ls-remote origin "$REPORT_BRANCH" | grep -q "$REPORT_BRANCH"; then
-    git branch "$REPORT_BRANCH"
-  else
-    git fetch -q origin "$REPORT_BRANCH":"$REPORT_BRANCH"
-  fi
-  git switch -q "$REPORT_BRANCH"
-
-  mkdir -p "$REPORT_DIR"
-  mv "${WORK_DIR}"/ci/openlab/test-report.pdf "$REPORT_DIR/$REPORT_NAME"
-  git config --local user.email "ci.seapath@gmail.com"
-  git config --local user.name "Seapath CI"
-  git add "$REPORT_DIR/$REPORT_NAME"
-  git commit -q -m "upload report $REPORT_NAME"
-  git push -q origin "$REPORT_BRANCH"
-  echo "Test report uploaded successfully"
-
-  echo See test Report at \
-  "https://${SEAPATH_BASE_REPO}/ci/blob/${REPORT_BRANCH}/docs/reports/PR-${PR_N}/${REPORT_NAME}"
+  mv "${WORK_DIR}"/ci/openlab/test-report.pdf "${WORK_DIR}"/seapath-test-report.pdf
 }
 
 case "$1" in
