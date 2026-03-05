@@ -224,9 +224,9 @@ test_vms() {
 # Prepare and launch latency tests
 test_latency() {
   CQFD_EXTRA_RUN_ARGS="${CQFD_EXTRA_RUN_ARGS} -v /var/run/docker.sock:/var/run/docker.sock"
-  git clone --branch=v1.0 https://github.com/seapath/svtrace-ansible
+  git clone https://github.com/seapath/svtrace-ansible
   cd svtrace-ansible
-  git clone -b main "${PRIVATE_INVENTORIES_REPO_URL}" inventories_private
+  git clone "${PRIVATE_INVENTORIES_REPO_URL}" inventories_private
   cqfd init
   cqfd run ansible-playbook \
   --limit "localhost,sv_publisher,guest0" \
