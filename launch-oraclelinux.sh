@@ -164,7 +164,7 @@ launch_vm_tests() {
   --key-file "${PRIVATE_KEYFILE_PATH}" \
   --limit VMs \
   playbooks/seapath_setup_prerequisdebian.yaml \
-  playbooks/seapath_setup_hardened_debian.yaml \
+  playbooks/seapath_setup_hardening.yaml \
   playbooks/ci_prepare_VMs.yaml
 
   cqfd run ansible-playbook \
@@ -183,7 +183,7 @@ launch_vm_tests() {
   --key-file "${PRIVATE_KEYFILE_PATH}" \
   --limit VMs \
   playbooks/seapath_setup_prerequisdebian.yaml \
-  playbooks/seapath_setup_hardened_debian.yaml \
+  playbooks/seapath_setup_hardening.yaml \
   playbooks/ci_prepare_VMs.yaml
 
   cqfd run ansible-playbook \
